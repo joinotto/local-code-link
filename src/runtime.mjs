@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { execFile } from "node:child_process";
+import { startSharedCodexServer } from "./codex-daemon.mjs";
 import { open, readFile, readdir, realpath, stat } from "node:fs/promises";
 import { StringDecoder } from "node:string_decoder";
 import os from "node:os";
@@ -223,10 +223,7 @@ export class CodingRuntime {
       catch (error) {
         if (error.code !== "ENOENT") throw error;
         const env = codingEnvironment(await this.environmentResolver());
-        await new Promise((resolve, reject) => execFile(this.codexBin, ["app-server", "daemon", "start"],
-          { env, timeout: 30_000 }, (startError) => startError
-            ? reject(new Error("Could not start the shared Codex daemon. Run local-code-link codex in your terminal and check authentication."))
-            : resolve()));
+        await startSharedCodexServer(this.codexBin, { env });
       }
     }
     await this.codexShared.connect();
