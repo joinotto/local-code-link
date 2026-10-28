@@ -60,10 +60,10 @@
 
 ## Future deployment acceptance
 
-These are deferred, not completed or verified. Deferral does not provide a
-blanket production guarantee.
+Checked items record observed results. Unchecked items remain deferred and
+unverified; deferral does not provide a blanket production guarantee.
 
-- [ ] Run hosted Linux/macOS CI after approved publication to joinotto/local-code-link
+- [x] Run hosted Linux/macOS CI after approved publication to joinotto/local-code-link
 - [ ] Verify Claude hardware sleep/wake while idle, active, and awaiting approval
 - [ ] Test natural long-lived credential expiry and renewal with the deployed auth method
 - [ ] Reopen existing provider terminals/daemons safely after upgrades

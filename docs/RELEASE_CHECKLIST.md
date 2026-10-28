@@ -15,17 +15,19 @@ implemented behavior, real-provider verification and outstanding release gates.
   upstream notices, and added contributor/DCO guidance and security reporting steps.
 - Initialized a standalone local repository with `main` and origin
   `joinotto/local-code-link`. The owner authorized the initial commit and push;
-  source publication and hosted CI must be confirmed against the remote revision.
-- The updated 172-test suite passed on macOS with no failures, skips or cancellations.
-  Linux evidence below covers the earlier 171-test revision; hosted current CI
-  remains outstanding.
+  source was published as revision `78dd8a333347606ab8b39b04ff2f32bb6ebe6919`.
+- The updated 172-test suite passed locally on macOS and in hosted macOS/Linux CI,
+  with no failures, skips or cancellations.
 - Distributable package inspection passed for 57 files, including license/notice
   matching and private scaffold exclusion.
 - The actual updated archive installed cleanly in a spaced-path temporary
   directory. Both CLI aliases, native PTY execution, both provider integrations,
   licensing, notices and maintained docs passed.
 - GitHub YAML files parsed successfully; CI action references were verified and
-  pinned. This is not evidence that hosted CI has run.
+  pinned. Hosted run [40653637630](https://github.com/joinotto/local-code-link/actions/runs/40653637630)
+  passed on both macOS and Linux for the initial source revision, including all
+  172 tests, real clean package installation, package inspection and dependency
+  audits with zero reported vulnerabilities.
 - npm publication remains disabled.
 
 ## Distribution verification — 2026-10-28
@@ -209,8 +211,8 @@ Listing them in [ROADMAP.md](ROADMAP.md) does not make them verified.
 - [x] macOS and isolated Linux automated regression suites.
 - [x] Select license; include `LICENSE`, `NOTICE` and matching package metadata.
 - [x] Choose repository destination: joinotto/local-code-link.
-- [ ] Publish reviewed source after owner authorization.
-- [ ] Hosted Linux and macOS CI jobs actually pass.
+- [x] Publish reviewed source after owner authorization.
+- [x] Hosted Linux and macOS CI jobs actually pass for the recorded source revision.
 - [ ] Codex laptop sleep/wake while idle, while a turn runs, and with approval pending.
 - [ ] Claude laptop sleep/wake while idle, while a turn runs, and with approval pending.
 - [ ] Fresh-user Telegram onboarding using the current pairing wizard.
@@ -231,8 +233,9 @@ was received; the owner must inspect Telegram for an extra “Claude bridge E2E�
 topic before this final cleanup gate can be checked. No blind retry or broad
 topic deletion was performed.
 
-Hosted CI awaits approved source publication to joinotto/local-code-link.
-Token rotation requires the owner
+Source publication and initial hosted CI are verified for the revision recorded
+above. Hardware, fresh-user onboarding, account protections and other unchecked
+deployment gates remain outstanding. Token rotation requires the owner
 to use BotFather if the token exposed earlier has not already been replaced.
 Never paste the replacement into chat; enter it at the hidden CLI prompt.
 

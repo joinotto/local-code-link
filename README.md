@@ -415,9 +415,11 @@ response can still cause duplicate notification/result delivery, because
 Telegram has no exactly-once send primitive; approval claims prevent duplicate
 execution authorization.
 
-The deployment tested here is macOS with Bedrock-authenticated Claude/Codex and
-Telegram. CI defines Linux/macOS protocol tests, but adding a workflow does not
-mean those hosted jobs have already run. Actual hardware sleep/wake, long-lived
+The live provider deployment tested here is macOS with Bedrock-authenticated
+Claude, authenticated Codex, and Telegram. Hosted macOS/Linux CI passed all
+172 regression tests, clean archive installation, package inspection and
+dependency audit checks for the initial source revision. These jobs do not
+certify live provider behavior on Linux. Actual hardware sleep/wake, long-lived
 credential expiry and other OS/provider configurations remain deployment checks,
 not blanket guarantees. See [SECURITY.md](SECURITY.md) and
 [release checklist](docs/RELEASE_CHECKLIST.md).
@@ -454,8 +456,9 @@ and verifies both command aliases, spaced paths, native PTY support and bundled
 integrations. `check:release` checks licensing, dependency locking, bundled
 integrations, private files, personal paths and credential-shaped text. Passing
 it is package readiness, not proof of hardware/provider/hosted-CI acceptance.
-Hosted CI and deployment acceptance are separate release gates. npm publication
-remains disabled; see [release preparation](docs/RELEASING.md).
+Hosted CI has passed for the initial source revision; deployment acceptance
+remains a separate release gate. npm publication remains disabled;
+see [release preparation](docs/RELEASING.md).
 
 `npm run test:sleep` prepares three isolated Codex states and prints a durable
 evidence directory. Sleep only after the final ready message, then wake the Mac
