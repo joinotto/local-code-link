@@ -83,11 +83,14 @@ This is not a shared multi-tenant hosted service. Contributors can use the
 [source development instructions](CONTRIBUTING.md).
 
 If a maintainer supplies a reviewed release archive, the equivalent install is
-`npm install --global ./local-code-link-0.9.0.tgz && local-code-link`.
+`npm install --global ./local-code-link-0.9.1.tgz && local-code-link`.
 
 On first setup, paste a token from `@BotFather` into the hidden terminal prompt
 (the token is not echoed). The CLI then gives you a link to
-add the bot to a private Telegram group. Enable Topics in the group and send the
+add the bot to a private Telegram group, with phone and desktop instructions
+for enabling Topics and granting Manage Topics and Delete Messages.
+See the [step-by-step Telegram setup guide](docs/TELEGRAM_SETUP.md) if you
+need help finding those settings. Send the
 exact `/connect CODE` command displayed in your terminal from your real
 owner/admin account. The random code belongs only to this setup attempt.
 LocalCodeLink automatically discovers the group ID and your user ID,
@@ -100,6 +103,19 @@ The BotFather token, private forum group, and owner/admin confirmation are still
 required; the bridge cannot create a bot account or grant itself permissions.
 Use `local-code-link setup telegram` only when you want to rerun pairing or
 replace a token. Finish pending approvals/tasks before a service reinstallation.
+
+If Codex works in another terminal but LocalCodeLink reports an executable-not-found
+error, run `command -v codex` in that working terminal. Supply its absolute path
+when rerunning setup, for example:
+
+```bash
+CODEX_BIN="/absolute/path/from-command-v/codex" local-code-link setup telegram
+```
+
+Setup saves the provider path for the background service. This is especially
+useful when a Node version manager exposes Codex only under one Node version.
+Choose **Reuse configured bot** to retain the existing pairing and topic mappings.
+See the [patch release notes](docs/CHANGELOG.md) for the latest fixes.
 
 The launcher finds Node.js on your `PATH`; `LOCAL_CODE_LINK_NODE_BIN` can name an
 explicit executable. No developer-specific home or executable path is required.
@@ -437,9 +453,9 @@ execution authorization.
 
 The live provider deployment tested here is macOS with Bedrock-authenticated
 Claude, authenticated Codex, and Telegram. Hosted macOS/Linux CI passed all
-184 regression tests, clean archive installation, direct GitHub source
-installation, package inspection and dependency audit checks for the guided
-setup revision. These jobs do not
+193 regression tests, clean archive installation, direct GitHub source
+installation, package inspection and dependency audit checks for the 0.9.1
+patch revision. These jobs do not
 certify live provider behavior on Linux. Actual hardware sleep/wake, long-lived
 credential expiry and other OS/provider configurations remain deployment checks,
 not blanket guarantees. See [SECURITY.md](SECURITY.md) and

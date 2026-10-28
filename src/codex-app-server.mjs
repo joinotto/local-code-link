@@ -109,7 +109,7 @@ export class CodexAppServerClient {
       }
     });
     await this.request("initialize", {
-      clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.0" },
+      clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.1" },
       capabilities: null,
     });
     this.write({ method: "initialized" });

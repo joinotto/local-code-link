@@ -7,6 +7,27 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## 0.9.1 patch verification — 2026-10-28
+
+- Added detailed Telegram phone/desktop setup instructions without changing
+  pairing authorization, project mappings or native approval policies.
+- Shared Codex startup now reports missing executables, permission failures,
+  empty-output exit codes/signals, excessive diagnostics and bounded timeouts.
+- The final 193-test regression suite passed locally on macOS without failures
+  or skips. Dependency audit found no known vulnerabilities.
+- The final 63-file package inspection and actual clean 0.9.1 tarball
+  installation passed, including both aliases, native PTY and bundled integrations.
+- Installed startup was verified against the real Codex daemon after correcting
+  the local executable configuration; both providers and the deployed
+  LocalCodeLink service were detected. This does not certify real Telegram
+  approval callbacks or the remaining hardware acceptance gates.
+- Hosted macOS/Linux run
+  [40668962850](https://github.com/joinotto/local-code-link/actions/runs/40668962850)
+  passed all 193 tests without failures/skips, both clean archive and public
+  source-archive installations, dependency audits and 63-file package inspections.
+  It tested PR #3's merge revision `3ab5922ef19fd73d62d288e4eaff1a8c9607822c`.
+- Any subsequent PR revision must pass the required hosted checks before merging.
+
 ## Guided setup and repository safeguards — 2026-10-28
 
 - First interactive launch offers project-folder/provider selection and one-time

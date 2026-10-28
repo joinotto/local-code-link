@@ -22,6 +22,8 @@ import { loadConfiguration, saveConfiguration } from "./config.mjs";
 import { fileURLToPath } from "node:url";
 import { buildLaunchAgent } from "./launch-agent.mjs";
 import { ensureTelegramReady, prepareQuickStart } from "./onboarding.mjs";
+import { telegramSetupGuide } from "./telegram-setup-guide.mjs";
+import { startSharedCodexServer } from "./codex-daemon.mjs";
 
 function usage() {
   console.log(`LocalCodeLink
@@ -212,14 +214,7 @@ async function setupTelegram(store, envFile, projectRoot) {
     };
   } else {
     const challenge = randomUUID().replaceAll("-", "");
-    const addBotUrl = `https://t.me/${bot.username}?startgroup&admin=manage_chat+manage_topics+delete_messages`;
-    console.log("");
-    console.log("Finish in Telegram:");
-    console.log("  1. Create or open a private group and enable Topics.");
-    console.log(`  2. Add @${bot.username} as administrator: ${addBotUrl}`);
-    console.log(`  3. Send /connect ${challenge} in that group from your owner/admin account.`);
-    console.log("");
-    console.log("Waiting for /connect…");
+    console.log(telegramSetupGuide(bot.username, challenge));
     pairing = await waitForTelegramConnect(client, bot, {
       challenge,
       onRejected: (message) => console.log(`! ${message}`),
@@ -344,7 +339,6 @@ async function launchInteractiveProvider(store, project, provider, projectRoot) 
     : process.env.CLAUDE_BIN || "claude";
   const executable = await resolveExecutable(configured);
   let sessionId = project.sessionIds?.[provider];
-  let remoteCodex = false;
   let tuiProxy;
   let remoteEndpoint = "unix://";
   if (provider === "claude") {
@@ -379,11 +373,7 @@ async function launchInteractiveProvider(store, project, provider, projectRoot) 
       try { process.kill(project.localSession.pid, 0); alive = true; } catch { /* stale session */ }
       if (alive) throw new Error("This project already has a linked Codex terminal. Use it or Telegram; close it before reopening.");
     }
-    const daemon = await execute(executable, ["app-server", "daemon", "start"], { env: codingEnvironment() });
-    remoteCodex = daemon.code === 0;
-    if (!remoteCodex) {
-      throw new Error(`Cannot start the shared Codex server: ${daemon.stderr.trim() || daemon.stdout.trim()}`);
-    }
+    await startSharedCodexServer(executable);
     tuiProxy = new CodexTuiProxy(store, project);
     try {
       const selection = await selectCodexSession(store, project, tuiProxy.metadata);
