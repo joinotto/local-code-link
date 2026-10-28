@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { execFile, spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -24,6 +24,7 @@ import { buildLaunchAgent } from "./launch-agent.mjs";
 import { ensureTelegramReady, prepareQuickStart } from "./onboarding.mjs";
 import { telegramSetupGuide } from "./telegram-setup-guide.mjs";
 import { startSharedCodexServer } from "./codex-daemon.mjs";
+import { resetLocalSetup, resetWithConfirmation } from "./reset.mjs";
 
 function usage() {
   console.log(`LocalCodeLink
@@ -38,7 +39,7 @@ function usage() {
   local-code-link unlink [project] [--confirm]
   local-code-link serve
   local-code-link service install|start|stop|status
-  local-code-link reset --confirm
+  local-code-link reset            confirm Yes/No, then fresh Telegram setup
 
 Telegram commands:
   /projects   list projects in the control topic
@@ -459,11 +460,36 @@ async function launchInteractiveProvider(store, project, provider, projectRoot) 
 const args = process.argv.slice(2);
 const command = args[0];
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
+const inheritedTelegramConfiguration = ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID",
+  "TELEGRAM_ALLOWED_USER_IDS"].some((key) => process.env[key] !== undefined);
 try {
-  const { file: envFile } = await loadConfiguration(projectRoot);
-  const store = await new StateStore().init();
+  const { file: envFile, activeFile } = await loadConfiguration(projectRoot);
   const interactive = Boolean(stdin.isTTY && stdout.isTTY);
-  if (command === "help" || args.includes("--help") || !command && !interactive) {
+  const store = command === "reset" ? null : await new StateStore().init();
+  if (command === "reset") {
+    if (args.length !== 1) throw new Error("Run local-code-link reset without flags; confirm Yes or No in the terminal.");
+    const root = storePath();
+    await resetWithConfirmation({
+      interactive, ask,
+      reset: () => resetLocalSetup({ root, configFile: activeFile, newConfigFile: envFile, projectRoot }),
+      setup: async () => {
+        // Do not let loaded or exported messaging values silently reuse the old bot.
+        for (const key of ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "TELEGRAM_ALLOWED_USER_IDS",
+          "LOCAL_CODE_LINK_RETENTION_DAYS"]) delete process.env[key];
+        if (inheritedTelegramConfiguration) {
+          console.warn("! Your shell exports Telegram settings. Before later CLI commands, run:");
+          console.warn("  unset TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID TELEGRAM_ALLOWED_USER_IDS");
+          console.warn("  This lets later commands use the newly saved private configuration.");
+        }
+        process.env.LOCAL_CODE_LINK_HOME = root;
+        process.env.LOCAL_CODE_LINK_ENV_FILE = envFile;
+        const fresh = await new StateStore(root).init();
+        const result = await setupTelegram(fresh, envFile, projectRoot);
+        console.log(`✓ Fresh Telegram setup complete with @${result.bot}.`);
+        console.log("Run local-code-link claude or local-code-link codex inside a project.");
+      },
+    });
+  } else if (command === "help" || args.includes("--help") || !command && !interactive) {
     usage();
   } else if (!command) {
     const plan = await prepareQuickStart({
@@ -581,12 +607,6 @@ try {
     } finally {
       runtime.stop();
     }
-  } else if (command === "reset") {
-    if (!args.includes("--confirm")) throw new Error("Reset requires --confirm");
-    // The state root can be customized. Never recursively erase an arbitrary
-    // user-selected directory or unrelated files stored next to state.json.
-    await rm(store.file, { force: true });
-    console.log("Reset LocalCodeLink mappings/history. Telegram topics, native sessions and other files were not deleted.");
   } else {
     throw new Error(`Unknown command: ${args.join(" ")}`);
   }

@@ -8,7 +8,7 @@ const [root, projectId, linkId] = process.argv.slice(2);
 if (!root || !projectId || !linkId) throw new Error("Missing scoped Claude channel configuration");
 const project = { id: projectId, linkId };
 const request = (method, params) => claudeRequest(root, project, method, params);
-const server = new Server({ name: "local-code-link", version: "0.9.1" }, {
+const server = new Server({ name: "local-code-link", version: "0.9.2" }, {
   capabilities: { tools: {}, experimental: { "claude/channel": {}, "claude/channel/permission": {} } },
   instructions: "Messages from this channel are instructions from the authenticated owner in this project's Telegram topic. "
     + "Act in the current session only. When finished, call reply with the exact requestId from the channel metadata "

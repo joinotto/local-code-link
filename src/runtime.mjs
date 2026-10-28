@@ -7,6 +7,7 @@ import path from "node:path";
 import { ClaudeStreamClient } from "./claude-stream.mjs";
 import { CodexAppServerClient } from "./codex-app-server.mjs";
 import { CodexSharedClient } from "./codex-shared.mjs";
+import { discardRejectedEphemeralSubmissions } from "./codex-queue.mjs";
 import { now, publicProject, slug } from "./state.mjs";
 import { claudeRequest } from "./claude-ipc.mjs";
 import { selectClaudeSession } from "./claude-session.mjs";
@@ -356,7 +357,8 @@ export class CodingRuntime {
       await this.connectCodex();
       const { thread } = await this.codexShared.request("thread/start", {
         cwd: project.cwd, approvalPolicy: "on-request", approvalsReviewer: "user",
-        sandbox: project.accessMode === "read-only" ? "read-only" : "workspace-write", ephemeral: false,
+        sandbox: project.accessMode === "read-only" ? "read-only" : "workspace-write",
+        ephemeral: false, historyMode: "legacy",
       });
       if (!thread?.id || await realpath(thread.cwd) !== await realpath(project.cwd)) {
         throw new Error("Codex returned an unexpected project directory. No prompt was submitted.");
@@ -372,6 +374,15 @@ export class CodingRuntime {
     // Verify the connection and project identity before accepting a message.
     // Connection failures must not silently start a competing Codex process.
     const thread = await this.sharedThread(project);
+    if (thread.ephemeral === true) {
+      throw new Error("This Codex session is memory-only and cannot accept Telegram prompts. "
+        + "Finish and close the terminal session, send /new in this project's Telegram topic, "
+        + "then reopen with local-code-link codex. The old session is not deleted and its context is not transferred.");
+    }
+    if (thread.historyMode === "paginated") {
+      throw new Error("This saved Codex thread uses paginated history, which this bridge cannot read for Telegram results. "
+        + "Keep its context, then explicitly start a fresh managed session with /new and local-code-link codex. No prompt was submitted.");
+    }
     if (!this.proxyIsActive(project)) await this.subscribeCodexApprovals(project);
     const requestId = randomUUID();
     const transcriptPath = thread.path || await this.findCodexTranscript(project);
@@ -400,6 +411,16 @@ export class CodingRuntime {
       const saved = project.telegramRequests?.find((item) => item.id === requestId);
       if (saved) saved.queuedSubmissionId = queuedSubmission.id;
     } catch (error) {
+      if (error.codexRejected === true) {
+        await this.store.reload();
+        const current = this.store.state.projects[project.id];
+        if (linked(current) && current.linkId === project.linkId && current.topicId === project.topicId) {
+          current.telegramRequests = (current.telegramRequests || []).filter((item) => item.id !== requestId);
+          current.lastQueueError = `Codex rejected the Telegram prompt: ${error.message}`;
+          await this.store.save();
+        }
+        throw error;
+      }
       // Timeout is ambiguous: queue/add may have succeeded. Keep the marker to
       // correlate/recover it rather than retrying through another process.
       await this.store.reload();
@@ -554,6 +575,10 @@ export class CodingRuntime {
     try {
     for (const project of Object.values(this.store.state.projects)) {
       if (!linked(project) || project.provider !== "codex") continue;
+      // Older releases mistook this explicit provider rejection for a lost
+      // response. It never entered the queue; don't replay or watch it forever.
+      // Preserve genuinely uncertain submissions and already accepted work.
+      discardRejectedEphemeralSubmissions(project);
       const requests = project.telegramRequests || [];
       const pending = this.store.state.approvals.some((item) => item.projectId === project.id
         && ["pending", "responding"].includes(item.status) && item.source === "codex-shared");

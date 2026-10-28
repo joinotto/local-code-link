@@ -131,3 +131,88 @@ is installed under a different Node version.
 See [release acceptance](RELEASE_CHECKLIST.md) for observed results and remaining
 live/hardware checks. Automated tests and checksum verification are not full
 production sign-off.
+
+## Reset and pair again (0.9.2 development build)
+
+Reset is an explicit start-over operation, **not** a required upgrade step.
+The following new workflow is not included in the published 0.9.1 archive yet:
+
+```sh
+local-code-link reset
+```
+
+Read the scope shown in the terminal and answer **Yes** or **No**.
+Enter defaults to No; invalid answers are requested again.
+Piped/noninteractive execution and the old `--confirm` bypass are rejected.
+No does not initialize a new state directory or modify existing files.
+
+Before choosing Yes, finish pending approvals/queued deliveries and close
+managed coding sessions. Stop a foreground `serve` process yourself.
+Reset can stop the matching macOS launchd service, but never kills unrelated
+coding/provider processes. If history cannot be safely checked for active work,
+reset refuses rather than guessing that it is idle.
+
+Yes archives only known bridge history/configuration/log files, stale relay
+endpoints and the matching service definition into a private recovery directory.
+It removes only this installation's owned provider hooks, preserving other
+settings and permission rules. New stores/writers are blocked during archival.
+Unrelated files in a custom state directory remain untouched.
+
+Fresh Telegram setup starts immediately and requires hidden token entry and a
+new owner/admin `/connect CODE`. Old loaded or inherited Telegram credentials
+are not reused. Installed provider executable locations and native authentication
+remain available; project/session mappings do not.
+If you previously exported Telegram settings in your shell, run this before
+later CLI commands so the freshly saved private configuration takes precedence:
+
+```sh
+unset TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID TELEGRAM_ALLOWED_USER_IDS
+```
+
+Project files, native Claude/Codex session history and Telegram messages remain.
+Old Telegram topics are not deleted, but lose their local mappings; linking
+projects after reset creates fresh topics. This does not revoke a bot token.
+Replace any previously exposed token through BotFather before reconnecting.
+
+If setup is cancelled or pairing fails, the old setup is not silently restored.
+Use `local-code-link setup telegram` to continue pairing.
+The backup location printed by reset retains the previous configuration/history
+for recovery. Backups contain private data and potentially credentials; do not
+commit or share them.
+
+## Recovering a memory-only Codex session (0.9.2 development fix)
+
+If Telegram reports `ephemeral thread does not support queued submissions`,
+the linked terminal created a memory-only thread. Updated starts/forks explicitly
+use persistent threads. Installing the update does not alter an already-running
+terminal relay or convert its thread.
+
+Finish any current work and close that project's terminal session. After updating
+the background service, send `/new` in the project's Telegram topic, then run
+`local-code-link codex` from that project's folder and resend the rejected prompt.
+This keeps the existing project/topic mapping; it starts a fresh conversation.
+The old native thread is not deleted, but its context is not automatically
+transferred. Save any context you need before closing a memory-only session.
+If the native server already reports `thread not loaded`, the updated CLI can
+discard that unavailable binding and start fresh in the same project without
+`/new`, provided no genuinely pending Telegram work remains.
+The CLI itself clears legacy definite ephemeral-queue rejections during this
+check; those rejected prompts do not require a service restart to unblock opening.
+
+The updated service removes only legacy request records containing the exact
+ephemeral-queue rejection with no accepted queue ID or result. It never replays
+those prompts. Timeouts and disconnected submissions remain uncertain rather
+than being automatically retried.
+
+## Codex reserved rollout paths and history format
+
+Codex can report a persistent thread and a future rollout path before its first
+user message. That metadata alone is not proof it can resume. The CLI now checks
+for a nonempty rollout file; a verified empty/unmaterialized binding starts fresh
+in the same project/topic. Existing turns, active work or failed verification
+prevent replacement. No native history files are deleted.
+
+New managed threads explicitly use legacy JSONL history for this bridge's
+result correlation. Existing paginated threads are not converted: preserve
+their context and explicitly use `/new` for a supported managed conversation.
+Paginated-history result support remains future work.

@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.9.2 — release candidate (2026-10-28)
+
+- Linked Codex terminal starts/forks now explicitly create persistent threads
+  so Telegram queue submissions are supported; native approval policies are unchanged.
+- Explicit Codex queue rejections no longer remain as uncertain pending work.
+  Recovery clears only legacy definite ephemeral-queue rejections, without replay.
+  Existing memory-only threads are preserved and require an explicit fresh session.
+- Stale `thread not loaded` bindings now recover like missing sessions without
+  changing project topics or native history; genuinely pending work still blocks replacement.
+- CLI session selection also clears only legacy definite ephemeral rejections,
+  so reopening does not depend on a background-service reload.
+- Codex resume verifies that a nonempty rollout file actually exists, rather
+  than trusting a reserved path in live metadata. Empty unmaterialized sessions
+  start fresh; existing turns, active work and verification failures preserve
+  the binding instead of silently replacing context.
+- New managed Codex threads explicitly use legacy JSONL history, matching native
+  resume and result correlation. Existing paginated conversations are preserved
+  and rejected with guidance, not silently converted or sent untrackable prompts.
+- Native Codex replies remain actionable when the OS username lookup is
+  unavailable; the CLI actor label falls back without changing authorization.
+- `local-code-link reset` asks Yes/No with a safe No default, archives local
+  history/configuration and starts fresh hidden-token Telegram pairing.
+- Active-work/service/relay checks and a reset guard prevent clearing live
+  approvals or concurrent state writes. Unrelated files, provider settings,
+  native histories and Telegram messages are preserved.
+- Recovery backups are private; noninteractive and `--confirm` bypasses are
+  rejected. Existing versioned release tags/archives remain unchanged.
+
 ## 0.9.1 — 2026-10-28 (preview)
 
 [Published preview and checksum](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1).
