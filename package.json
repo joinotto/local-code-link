@@ -1,0 +1,62 @@
+{
+  "name": "local-code-link",
+  "description": "Control project-scoped Claude Code and Codex sessions from Telegram.",
+  "version": "0.9.0",
+  "license": "Apache-2.0",
+  "author": "Anurag Patel (geekfarmer)",
+  "private": true,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joinotto/local-code-link.git"
+  },
+  "homepage": "https://github.com/joinotto/local-code-link#readme",
+  "bugs": {
+    "url": "https://github.com/joinotto/local-code-link/issues"
+  },
+  "keywords": [
+    "cli",
+    "telegram",
+    "claude-code",
+    "codex",
+    "coding-agents",
+    "local-first"
+  ],
+  "files": [
+    "bin/",
+    "src/",
+    "scripts/",
+    "integrations/",
+    "docs/",
+    "npm-shrinkwrap.json",
+    "README.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "bin": {
+    "local-code-link": "./bin/local-code-link",
+    "localcodelink": "./bin/local-code-link"
+  },
+  "scripts": {
+    "postinstall": "node scripts/prepare-terminal.mjs",
+    "start": "node src/cli.mjs serve",
+    "test": "node --test",
+    "check": "npm test && npm run check:release",
+    "test:package": "node scripts/verify-package.mjs",
+    "test:sleep": "node scripts/verify-sleep-all-live.mjs",
+    "check:release": "node scripts/check-release.mjs",
+    "doctor": "node src/cli.mjs doctor"
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "node-pty": "1.1.0",
+    "undici": "7.30.1",
+    "ws": "8.22.0",
+    "zod": "4.6.7"
+  }
+}

@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+SOURCE=$0
+while [ -h "$SOURCE" ]; do
+  SOURCE_DIR=$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd)
+  SOURCE_TARGET=$(readlink "$SOURCE")
+  case "$SOURCE_TARGET" in
+    /*) SOURCE=$SOURCE_TARGET ;;
+    *) SOURCE=$SOURCE_DIR/$SOURCE_TARGET ;;
+  esac
+done
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd)
+LINK_DIR=${LOCAL_CODE_LINK_DIR:-$(dirname -- "$SCRIPT_DIR")}
+LOCAL_CODE_LINK_HOME=${LOCAL_CODE_LINK_HOME:-$HOME/.local-code-link}
+export LOCAL_CODE_LINK_HOME
+
+COMMAND=${1:-}
+if [ "$#" -gt 0 ]; then shift; fi
+
+NODE_BIN=${LOCAL_CODE_LINK_NODE_BIN:-node}
+if ! command -v "$NODE_BIN" >/dev/null 2>&1; then
+  printf '%s\n' 'LocalCodeLink requires Node.js on PATH, or LOCAL_CODE_LINK_NODE_BIN pointing to Node.js.' >&2
+  exit 127
+fi
+"$NODE_BIN" -e 'const v=process.versions.node.split(".").map(Number);if(v[0]<20||(v[0]===20&&(v[1]<18||(v[1]===18&&v[2]<1)))){console.error("LocalCodeLink requires Node.js >=20.18.1. Activate a supported Node.js version and try again.");process.exit(1);}'
+
+exec "$NODE_BIN" "$LINK_DIR/src/cli.mjs" "$COMMAND" "$@"

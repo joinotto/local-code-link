@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible bug without sensitive data.
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: OS, Node.js, LocalCodeLink and affected Claude/Codex CLI version.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected result
+      description: Include minimal steps. Do not include tokens, credentials, full state or transcripts.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Include only relevant redacted errors. Report vulnerabilities privately.

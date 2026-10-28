@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.grok-hub/
+.local-code-link/
+node_modules/
+coverage/
+*.tgz
+*.log
+.opensource/
+.DS_Store
+.npmrc
+*.pem
+*.key
+*.p12

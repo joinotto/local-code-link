@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="640" viewBox="0 0 1920 640" role="img" aria-labelledby="title description">
+  <title id="title">LocalCodeLink</title>
+  <desc id="description">Your local coding agents, connected to chat. Claude Code, Codex, and Telegram.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080d14"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#3b6d80" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#3b6d80" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="bounds"><rect x="24" y="24" width="1872" height="592" rx="32"/></clipPath>
+  </defs>
+  <g clip-path="url(#bounds)">
+    <rect x="24" y="24" width="1872" height="592" rx="32" fill="url(#background)"/>
+    <circle cx="314" cy="650" r="380" fill="#141b2e" opacity=".62"/>
+    <circle cx="1620" cy="40" r="350" fill="#151e32" opacity=".68"/>
+    <ellipse cx="960" cy="290" rx="700" ry="260" fill="url(#glow)"/>
+    <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="850" font-size="132" letter-spacing="-6" text-anchor="middle">
+      <text x="984" y="290" text-anchor="middle" fill="#294a58">LocalCodeLink</text>
+      <text x="972" y="278" text-anchor="middle" fill="#3a6575">LocalCodeLink</text>
+      <text x="960" y="266" text-anchor="middle" fill="#f2f7fc">LocalCodeLink</text>
+    </g>
+    <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" text-anchor="middle">
+      <text x="960" y="374" text-anchor="middle" fill="#bac8dd" font-size="40" font-weight="600">Your local coding agents, connected to chat.</text>
+      <g fill="#899bb7" font-size="28" font-weight="600">
+        <circle cx="600" cy="465" r="8" fill="#d9a67c"/>
+        <text x="700" y="475" text-anchor="middle">Claude Code</text>
+        <circle cx="888" cy="465" r="8" fill="#a3dfbd"/>
+        <text x="959" y="475" text-anchor="middle">Codex</text>
+        <circle cx="1109" cy="465" r="8" fill="#76d2f2"/>
+        <text x="1200" y="475" text-anchor="middle">Telegram</text>
+      </g>
+    </g>
+    <path d="M184 556H1736" stroke="#253044" stroke-opacity=".65"/>
+  </g>
+</svg>
