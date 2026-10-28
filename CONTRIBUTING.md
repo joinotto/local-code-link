@@ -8,11 +8,19 @@ changes. LocalCodeLink is a JavaScript ESM CLI; no TypeScript build is required.
 Use Node.js 22.22.0 for the verified development environment.
 
 ```sh
+git clone https://github.com/joinotto/local-code-link.git
+cd local-code-link
 npm ci
 npm test
 npm run check:release
 npm run test:package
 ```
+
+For local CLI development, `npm link` exposes this checkout's launcher. End users
+can use the single-line GitHub archive installation in README.md.
+
+`npm run test:install` installs the real public source archive into an isolated
+temporary global prefix. It does not change your real global install or bot.
 
 The regression suite uses local Unix sockets. Run it on a machine/container that
 allows these fixtures; sandbox permission errors are not successful test results.

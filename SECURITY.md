@@ -74,11 +74,11 @@ Do not post tokens, full state files, transcripts or credential-bearing logs in
 public issues. Report security problems privately to the repository maintainer
 and include sanitized reproduction steps and affected versions.
 
-If GitHub private vulnerability reporting is enabled, use
+GitHub private vulnerability reporting is enabled for this repository. Use
 https://github.com/joinotto/local-code-link/security/advisories/new.
 If it is unavailable, ask the maintainer for a private reporting route without
-disclosing vulnerability details. A monitored route has not yet been verified.
-The maintainer must enable and monitor it before advertising it as available.
+disclosing vulnerability details. The maintainer must monitor incoming reports;
+response times have not been independently verified.
 
 The current release candidate is the only version under evaluation. No long-term
 support policy or security certification is claimed.

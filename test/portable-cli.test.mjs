@@ -18,7 +18,8 @@ async function fixture() {
   await symlink(path.join(repo, "node_modules"), path.join(copy, "node_modules"));
   const env = { ...process.env, NODE_NO_WARNINGS: "1", LOCAL_CODE_LINK_DIR: copy,
     LOCAL_CODE_LINK_NODE_BIN: process.execPath, LOCAL_CODE_LINK_HOME: path.join(root, "state"),
-    LOCAL_CODE_LINK_ENV_FILE: path.join(root, "config.env"), TELEGRAM_BOT_TOKEN: "test-only" };
+    LOCAL_CODE_LINK_ENV_FILE: path.join(root, "config.env"), TELEGRAM_BOT_TOKEN: "test-only",
+    TELEGRAM_ALLOWED_USER_IDS: "123" };
   const command = path.join(copy, "bin", "local-code-link");
   return { root, copy, env, command };
 }
@@ -41,7 +42,7 @@ for (const provider of ["claude", "codex"]) {
     const project = path.join(root, "project with spaces");
     await mkdir(project);
     const s = await new StateStore(env.LOCAL_CODE_LINK_HOME).init();
-    s.state.telegram = { chatId: "-1001", botId: 1 };
+    s.state.telegram = { chatId: "-1001", botId: 1, controlTopicId: 2 };
     s.state.projects.demo = { id: "demo", name: "demo", cwd: await realpath(project),
       provider, linkId: "test-link", topicId: 9, status: "idle", sessionIds: {} };
     await s.save();
@@ -59,4 +60,23 @@ test("missing Node produces a clear portable launcher error", async () => {
   env.LOCAL_CODE_LINK_NODE_BIN = "/nonexistent/node";
   await assert.rejects(execute("/bin/sh", [command, "help"], { env }), (error) =>
     error.code === 127 && /requires Node.js on PATH/.test(error.stderr));
+});
+
+test("a noninteractive first provider launch gives guided setup instructions without opening a session", async () => {
+  const { root, env, command } = await fixture();
+  delete env.TELEGRAM_BOT_TOKEN;
+  const project = path.join(root, "project");
+  await mkdir(project);
+  env.CLAUDE_BIN = env.CODEX_BIN = "/nonexistent/must-not-spawn";
+  await assert.rejects(execute("/bin/sh", [command, "codex"], { env, cwd: project }), (error) =>
+    /First-time setup needs an interactive terminal/.test(error.stderr)
+    && /Run local-code-link in your project folder/.test(error.stderr));
+});
+
+test("no arguments in noninteractive mode show help without calling Telegram or providers", async () => {
+  const { env, command } = await fixture();
+  env.CLAUDE_BIN = env.CODEX_BIN = "/nonexistent/must-not-spawn";
+  const { stdout, stderr } = await execute("/bin/sh", [command], { env });
+  assert.match(stdout, /guided setup and project launch/);
+  assert.equal(stderr, "");
 });

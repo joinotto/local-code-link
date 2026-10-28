@@ -7,6 +7,24 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## Guided setup and repository safeguards — 2026-10-28
+
+- First interactive launch offers project-folder/provider selection and one-time
+  Telegram pairing. Explicit provider commands also guide an unconfigured
+  interactive user through setup.
+- Noninteractive commands never prompt for tokens or initiate pairing.
+  A failed/incomplete setup does not proceed to linking or provider launch.
+- The expanded 184-test suite passed locally on macOS. The earlier hosted
+  172-test results below remain revision-specific; this change needs its own CI.
+- GitHub confirmed `main` protection: pull requests, strict app-bound macOS/Linux
+  checks, administrator enforcement, no force-pushes/deletion, linear history
+  and resolved conversations. Required reviewer count is zero so a solo maintainer
+  can merge their own PR after CI; this is not independent review.
+- Secret scanning, push protection, Dependabot security updates and private
+  vulnerability reporting are enabled. Maintainer response time is not verified.
+- Direct GitHub archive installation and a temporary global-prefix verifier are
+  added; successful runtime installation must be observed before claiming it.
+
 ## Open-source repository preparation — 2026-10-28
 
 - Used the `joinotto/opensource` common-only generator in an ignored temporary

@@ -21,10 +21,12 @@ import { readSecret } from "./secret-input.mjs";
 import { loadConfiguration, saveConfiguration } from "./config.mjs";
 import { fileURLToPath } from "node:url";
 import { buildLaunchAgent } from "./launch-agent.mjs";
+import { ensureTelegramReady, prepareQuickStart } from "./onboarding.mjs";
 
 function usage() {
   console.log(`LocalCodeLink
 
+  local-code-link                  guided setup and project launch
   local-code-link setup telegram
   local-code-link claude [project-name] [--link-only]
   local-code-link codex [project-name] [--link-only]
@@ -119,6 +121,7 @@ async function installCodexHook(projectRoot) {
   ensureHook("UserPromptSubmit", "*", 10);
   ensureHook("Stop", "*", 30);
   if (changed) {
+    await mkdir(path.dirname(hooksFile), { recursive: true, mode: 0o700 });
     await writeFile(hooksFile, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
   }
   return { installed: changed, file: hooksFile };
@@ -242,18 +245,20 @@ async function setupTelegram(store, envFile, projectRoot) {
     codex: await resolveExecutable(process.env.CODEX_BIN || "codex"),
     claude: await resolveExecutable(process.env.CLAUDE_BIN || "claude"),
   };
-  await saveConfiguration(envFile, {
+  const configuration = {
     TELEGRAM_BOT_TOKEN: token,
     TELEGRAM_CHAT_ID: chatId,
     TELEGRAM_ALLOWED_USER_IDS: allowedUsers,
     LOCAL_CODE_LINK_HOME: store.root,
     CODEX_BIN: providerBins.codex,
     CLAUDE_BIN: providerBins.claude,
-  });
+  };
+  await saveConfiguration(envFile, configuration);
+  Object.assign(process.env, Object.fromEntries(Object.entries(configuration).map(([key, value]) => [key, String(value)])));
   process.env.LOCAL_CODE_LINK_ENV_FILE = envFile;
   await client.sendMessage(chatId, "✅ LocalCodeLink is configured.", { topicId: controlTopicId });
-  await installCodexHook(projectRoot);
   const service = await installService(projectRoot, providerBins);
+  if (!service.installed) console.log("! Background service is not available on this platform. Run local-code-link serve in another terminal for Telegram access.");
   return { bot: bot.username || bot.first_name, chatId: String(chatId), controlTopicId, service };
 }
 
@@ -467,8 +472,25 @@ const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 try {
   const { file: envFile } = await loadConfiguration(projectRoot);
   const store = await new StateStore().init();
-  if (!command || command === "help" || args.includes("--help")) {
+  const interactive = Boolean(stdin.isTTY && stdout.isTTY);
+  if (command === "help" || args.includes("--help") || !command && !interactive) {
     usage();
+  } else if (!command) {
+    const plan = await prepareQuickStart({
+      store, interactive, ask,
+      discover: async () => {
+        const found = [];
+        for (const provider of ["claude", "codex"]) {
+          const executable = await resolveExecutable(process.env[`${provider.toUpperCase()}_BIN`] || provider);
+          if ((await execute(executable, ["--version"], { timeout: 8000, env: codingEnvironment() })).code === 0) found.push(provider);
+        }
+        return found;
+      },
+      setup: () => setupTelegram(store, envFile, projectRoot),
+    });
+    process.chdir(plan.cwd);
+    const linked = await linkProject(store, plan.provider);
+    await launchInteractiveProvider(store, store.state.projects[linked.id], plan.provider, projectRoot);
   } else if (command === "setup" && args[1] === "telegram") {
     const result = await setupTelegram(store, envFile, projectRoot);
     console.log(`✓ Telegram setup complete with @${result.bot}.`);
@@ -479,6 +501,9 @@ try {
       || providerOptions.filter((arg) => !arg.startsWith("--")).length > 1) {
       throw new Error(`Use local-code-link ${command} [project-name] [--link-only]`);
     }
+    await ensureTelegramReady({
+      store, interactive, setup: () => setupTelegram(store, envFile, projectRoot),
+    });
     const linked = await linkProject(store, command, providerOptions.find((arg) => !arg.startsWith("--")));
     if (providerOptions.includes("--link-only")) {
       console.log("Mapping saved. To enable shared terminal control, open the managed session with local-code-link " + command + ".");

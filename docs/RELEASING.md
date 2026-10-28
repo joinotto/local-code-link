@@ -16,10 +16,14 @@ claimed. Repository publication and npm publication are separate actions.
 4. Inspect the exact public file list before committing. This working directory
    originally belonged to a larger parent repository; do not include siblings or
    private parent history in the standalone repository.
-5. With owner approval, publish reviewed source to `joinotto/local-code-link`.
-   Run the hosted macOS/Linux checks and record their actual results.
-6. The owner must enable a monitored private vulnerability-reporting route and
-   review branch protections before claiming those account-side safeguards.
+5. With owner approval, publish reviewed source to `joinotto/local-code-link`
+   through a pull request. `main` requires passing macOS/Linux checks and prohibits
+   direct pushes, force-pushes and deletion, including for administrators.
+   Reviews are optional; maintainers can merge their own PR after required checks.
+   Keep PRs up to date, resolve review conversations, and use squash merge.
+6. Private vulnerability reporting, secret scanning/push protection and Dependabot
+   security updates are enabled. The owner must monitor incoming reports and
+   periodically review the account-side configuration.
 
 The intended repository is https://github.com/joinotto/local-code-link.
 GitHub configuration files do not themselves enable account protections.

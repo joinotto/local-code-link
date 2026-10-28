@@ -54,6 +54,8 @@
 - [x] Durable hardware acceptance reports and package release inspection
 - [x] Apache-2.0 license, attribution, contributor docs and standalone CLI metadata
 - [x] OpenSource repository conventions, SVG banner and SHA-pinned CI definition
+- [x] Guided first launch and automatic first-run Telegram pairing for provider commands
+- [x] Protected main branch, required CI, and repository security protections
 - [x] Live deployed restart acceptance for Claude/Codex pending approvals
 - [x] Real isolated Telegram outage and Bedrock credential-rejection recovery checks
 - [ ] Hardware sleep/wake verification for Codex: idle, active turn, pending approval
