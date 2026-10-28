@@ -45,6 +45,7 @@
     "test": "node --test",
     "check": "npm test && npm run check:release",
     "test:package": "node scripts/verify-package.mjs",
+    "test:install": "node scripts/verify-source-install.mjs",
     "test:sleep": "node scripts/verify-sleep-all-live.mjs",
     "check:release": "node scripts/check-release.mjs",
     "doctor": "node src/cli.mjs doctor"

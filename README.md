@@ -50,28 +50,40 @@ IDs are saved so later messages resume the same Claude or Codex session.
 - a private forum-enabled Telegram supergroup;
 - the bot added as an administrator with Manage Topics and Delete Messages.
 
-## Install and configure
+## Quick start
+
+One copy-and-paste line installs the CLI and starts the guided setup:
 
 ```bash
-# From the source repository:
-git clone https://github.com/joinotto/local-code-link.git
-cd local-code-link
-npm ci
-npm link
-local-code-link setup telegram
+npm install --global https://github.com/joinotto/local-code-link/archive/refs/heads/main.tar.gz && local-code-link
 ```
 
-For a release tarball, install the supplied archive instead:
+The wizard lets you choose a project folder and an installed coding provider,
+pairs Telegram once, and opens the project's coding session. On macOS it also
+installs the background bridge. Subsequent projects need only:
 
 ```bash
-npm install --global ./local-code-link-0.9.0.tgz
-local-code-link setup telegram
+local-code-link codex
+# or
+local-code-link claude
 ```
 
-No public npm publication is claimed. Install only an archive from the chosen
-project repository/release. Each user runs their own local bridge and supplies
-their own Telegram bot and authenticated provider CLIs; this is not a shared
-multi-tenant hosted service.
+Running either provider command for the first time also starts Telegram setup
+automatically. `local-code-link` without arguments remains available as a guided
+launcher. Noninteractive use never starts a pairing wizard or reads a token.
+
+Use Node.js 22 and an authenticated provider CLI before starting. If npm reports
+a global-directory permission error, use a user-owned Node installation; do not
+run LocalCodeLink's setup or coding sessions with sudo.
+
+This installs directly from the protected GitHub `main` branch, not the npm
+registry; no public npm publication is claimed. Each user runs their own local
+bridge and supplies their own Telegram bot and authenticated provider CLIs.
+This is not a shared multi-tenant hosted service. Contributors can use the
+[source development instructions](CONTRIBUTING.md).
+
+If a maintainer supplies a reviewed release archive, the equivalent install is
+`npm install --global ./local-code-link-0.9.0.tgz && local-code-link`.
 
 On first setup, paste a token from `@BotFather` into the hidden terminal prompt
 (the token is not echoed). The CLI then gives you a link to
@@ -84,6 +96,11 @@ checks group privacy and bot permissions, creates the control topic, saves
 `0600`, and sends a test message.
 
 No Telegram chat IDs or user IDs need to be entered manually.
+The BotFather token, private forum group, and owner/admin confirmation are still
+required; the bridge cannot create a bot account or grant itself permissions.
+Use `local-code-link setup telegram` only when you want to rerun pairing or
+replace a token. Finish pending approvals/tasks before a service reinstallation.
+
 The launcher finds Node.js on your `PATH`; `LOCAL_CODE_LINK_NODE_BIN` can name an
 explicit executable. No developer-specific home or executable path is required.
 Native terminal preparation runs at install time; do not disable install scripts
@@ -130,11 +147,14 @@ CLI happened to be active most recently. Close the managed session and finish
 pending Telegram work before switching providers; saved Claude and Codex
 session IDs are kept separately.
 
-## Run
+## Background operation
 
-```bash
-npm start
-```
+First-time macOS setup starts the background service automatically. You can close
+the setup terminal once your coding session exits; the Telegram bridge remains
+running while the Mac is awake and connected.
+
+For foreground operation (including Linux's currently experimental native mode),
+run `local-code-link serve` in a separate terminal.
 
 The daemon uses Telegram long polling, so no tunnel is required.
 
@@ -417,8 +437,9 @@ execution authorization.
 
 The live provider deployment tested here is macOS with Bedrock-authenticated
 Claude, authenticated Codex, and Telegram. Hosted macOS/Linux CI passed all
-172 regression tests, clean archive installation, package inspection and
-dependency audit checks for the initial source revision. These jobs do not
+184 regression tests, clean archive installation, direct GitHub source
+installation, package inspection and dependency audit checks for the guided
+setup revision. These jobs do not
 certify live provider behavior on Linux. Actual hardware sleep/wake, long-lived
 credential expiry and other OS/provider configurations remain deployment checks,
 not blanket guarantees. See [SECURITY.md](SECURITY.md) and
@@ -456,7 +477,7 @@ and verifies both command aliases, spaced paths, native PTY support and bundled
 integrations. `check:release` checks licensing, dependency locking, bundled
 integrations, private files, personal paths and credential-shaped text. Passing
 it is package readiness, not proof of hardware/provider/hosted-CI acceptance.
-Hosted CI has passed for the initial source revision; deployment acceptance
+Hosted CI has passed for the guided setup revision; deployment acceptance
 remains a separate release gate. npm publication remains disabled;
 see [release preparation](docs/RELEASING.md).
 

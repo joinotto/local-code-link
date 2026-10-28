@@ -29,4 +29,7 @@ jobs:
       - run: npm run test:package
         env:
           NODE_NO_WARNINGS: "1"
+      - run: node scripts/verify-source-install.mjs "https://github.com/joinotto/local-code-link/archive/${{ github.sha }}.tar.gz"
+        env:
+          NODE_NO_WARNINGS: "1"
       - run: npm run check:release
