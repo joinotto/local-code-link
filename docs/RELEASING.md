@@ -4,6 +4,14 @@ LocalCodeLink is a release candidate. npm publication remains disabled through
 `private: true`; no publishing workflow or trusted-publisher configuration is
 claimed. Repository publication and npm publication are separate actions.
 
+## Current preview
+
+[Version 0.9.1](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1)
+is published from `f39929072a431f9ed1c1e61f47a2bc0280dc8a51` with an inspected
+archive and SHA-256 checksum. See [installation/upgrades](UPGRADING.md) for
+end-user steps and [release acceptance](RELEASE_CHECKLIST.md) for verification
+and remaining deployment gates.
+
 ## Review the source
 
 1. Run `npm ci`, `npm test`, `npm audit --omit=dev --audit-level=high`,
@@ -34,6 +42,16 @@ After source and hosted checks are reviewed, run `npm pack`. With separate
 approval, attach the inspected archive and its SHA-256 checksum to a GitHub
 preview release. Use a preview label; the archive version does not prove
 production readiness.
+
+Build from the exact reviewed commit and require its merged-main CI to pass.
+Test the exact checksummed archive in an isolated install. Upload the archive
+and checksum as a draft, download them and verify byte equality before publishing.
+Check the public download and confirm the tag points to the tested commit.
+
+Treat published tags and release archives as immutable. Do not replace the
+0.9.1 archive or move its tag for a later fix. Runtime/package changes need a new
+version and new verification. Documentation-only corrections can land through
+a protected PR without republishing an existing archive.
 
 Smoke-test the exact distributed archive on a clean machine with the recipient's
 own Telegram bot and authenticated Claude/Codex CLI. The macOS helper permissions
