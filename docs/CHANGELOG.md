@@ -2,6 +2,10 @@
 
 ## 0.9.1 — 2026-10-28 (preview)
 
+[Published preview and checksum](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1).
+See [installation and upgrades](UPGRADING.md); no reset or re-pairing is needed
+when retaining the same configuration/state directory.
+
 ### Setup guidance
 
 - Telegram pairing now shows phone and desktop instructions for enabling Topics,

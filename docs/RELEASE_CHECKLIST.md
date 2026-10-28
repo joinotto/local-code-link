@@ -7,6 +7,29 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## Published 0.9.1 preview — 2026-10-28
+
+- [GitHub preview v0.9.1](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1)
+  is published with the archive and SHA-256 file. npm publication remains disabled.
+- PR #3 was merged through normal branch protection; tag `v0.9.1` points to
+  `f39929072a431f9ed1c1e61f47a2bc0280dc8a51`.
+- Merged-main [run 40669462371](https://github.com/joinotto/local-code-link/actions/runs/40669462371)
+  passed both macOS/Linux hosts for that exact commit: all 193 tests, no
+  failures/skips, clean package/source installs, dependency audits with zero
+  reported vulnerabilities, and 63-file release inspection.
+- The exact release archive installed into an isolated global prefix with spaces;
+  version/private metadata, new modules/docs, both launchers and native PTY passed.
+- Uploaded assets were downloaded and checked for SHA-256 and byte equality
+  before publication. An anonymous public archive download also matched the
+  tested artifact after publication.
+- Published archive: `local-code-link-0.9.1.tgz`, 127938 bytes.
+  SHA-256: `f556de1bf5bd8e7ba439603ba1c6b660a1867f1eb69155d6db119d26494ee182`.
+- The versioned tag and release assets remain unchanged by later docs-only
+  updates. [Upgrade instructions](UPGRADING.md) preserve existing configuration
+  and topic mappings; no reset or re-pairing is required for 0.9.1.
+- These distribution checks do not resolve the remaining live Telegram,
+  physical sleep/wake, credential-expiry or other deployment acceptance gates.
+
 ## 0.9.1 patch verification — 2026-10-28
 
 - Added detailed Telegram phone/desktop setup instructions without changing

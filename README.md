@@ -14,8 +14,8 @@
 Control project-scoped Claude Code and Codex sessions from Telegram.
 
 LocalCodeLink is a Node.js CLI and local background service, not a TypeScript SDK.
-It is a release candidate; no public npm release or full production sign-off
-is claimed.
+[Version 0.9.1 is available as a GitHub preview](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1);
+no public npm release or full production sign-off is claimed.
 
 ```text
 Telegram bot
@@ -52,10 +52,10 @@ IDs are saved so later messages resume the same Claude or Codex session.
 
 ## Quick start
 
-One copy-and-paste line installs the CLI and starts the guided setup:
+One copy-and-paste line installs the published 0.9.1 preview and starts guided setup:
 
 ```bash
-npm install --global https://github.com/joinotto/local-code-link/archive/refs/heads/main.tar.gz && local-code-link
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz && local-code-link
 ```
 
 The wizard lets you choose a project folder and an installed coding provider,
@@ -76,14 +76,23 @@ Use Node.js 22 and an authenticated provider CLI before starting. If npm reports
 a global-directory permission error, use a user-owned Node installation; do not
 run LocalCodeLink's setup or coding sessions with sudo.
 
-This installs directly from the protected GitHub `main` branch, not the npm
-registry; no public npm publication is claimed. Each user runs their own local
+This installs the versioned GitHub release archive, not the npm registry.
+The release page includes its SHA-256 checksum; see
+[archive verification and upgrades](docs/UPGRADING.md).
+Each user runs their own local
 bridge and supplies their own Telegram bot and authenticated provider CLIs.
 This is not a shared multi-tenant hosted service. Contributors can use the
 [source development instructions](CONTRIBUTING.md).
 
-If a maintainer supplies a reviewed release archive, the equivalent install is
+If you download and verify the release archive first, the equivalent install is
 `npm install --global ./local-code-link-0.9.1.tgz && local-code-link`.
+For development builds, the moving source archive remains available:
+
+```bash
+npm install --global https://github.com/joinotto/local-code-link/archive/refs/heads/main.tar.gz
+```
+
+Unlike the versioned release, this follows future changes to `main`.
 
 On first setup, paste a token from `@BotFather` into the hidden terminal prompt
 (the token is not echoed). The CLI then gives you a link to
@@ -128,6 +137,29 @@ Use `LOCAL_CODE_LINK_HOME` for a dedicated custom state directory, or
 is parsed as data, not executed as shell code. Existing source-checkout `.env`
 files remain readable for compatibility; rerunning setup saves the private
 configuration outside the package without erasing mappings.
+
+## Upgrade an existing installation
+
+No reset, re-pairing or project migration is needed for 0.9.1 when using the same
+configuration/state directory. Finish pending approvals and coding/background
+work, close managed coding sessions normally, and stop an existing background
+service before replacing its installed files:
+
+```bash
+# macOS only; skip if no background service is installed/loaded
+local-code-link service stop
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz
+local-code-link service install
+local-code-link service status
+local-code-link doctor
+```
+
+Use the same npm prefix and supported Node installation as before; retain any
+original `--prefix` option. Then reopen the appropriate managed provider in each
+project with `local-code-link codex` or `local-code-link claude`.
+Already-running coding terminals do not automatically load new relay code.
+For custom prefixes, checksum verification and Linux foreground mode, see the
+[upgrade guide](docs/UPGRADING.md).
 
 ## Link a project
 
