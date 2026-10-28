@@ -453,9 +453,9 @@ execution authorization.
 
 The live provider deployment tested here is macOS with Bedrock-authenticated
 Claude, authenticated Codex, and Telegram. Hosted macOS/Linux CI passed all
-184 regression tests, clean archive installation, direct GitHub source
-installation, package inspection and dependency audit checks for the guided
-setup revision. These jobs do not
+193 regression tests, clean archive installation, direct GitHub source
+installation, package inspection and dependency audit checks for the 0.9.1
+patch revision. These jobs do not
 certify live provider behavior on Linux. Actual hardware sleep/wake, long-lived
 credential expiry and other OS/provider configurations remain deployment checks,
 not blanket guarantees. See [SECURITY.md](SECURITY.md) and
