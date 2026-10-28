@@ -437,8 +437,9 @@ execution authorization.
 
 The live provider deployment tested here is macOS with Bedrock-authenticated
 Claude, authenticated Codex, and Telegram. Hosted macOS/Linux CI passed all
-172 regression tests, clean archive installation, package inspection and
-dependency audit checks for the initial source revision. These jobs do not
+184 regression tests, clean archive installation, direct GitHub source
+installation, package inspection and dependency audit checks for the guided
+setup revision. These jobs do not
 certify live provider behavior on Linux. Actual hardware sleep/wake, long-lived
 credential expiry and other OS/provider configurations remain deployment checks,
 not blanket guarantees. See [SECURITY.md](SECURITY.md) and
@@ -476,7 +477,7 @@ and verifies both command aliases, spaced paths, native PTY support and bundled
 integrations. `check:release` checks licensing, dependency locking, bundled
 integrations, private files, personal paths and credential-shaped text. Passing
 it is package readiness, not proof of hardware/provider/hosted-CI acceptance.
-Hosted CI has passed for the initial source revision; deployment acceptance
+Hosted CI has passed for the guided setup revision; deployment acceptance
 remains a separate release gate. npm publication remains disabled;
 see [release preparation](docs/RELEASING.md).
 

@@ -14,16 +14,21 @@ implemented behavior, real-provider verification and outstanding release gates.
   interactive user through setup.
 - Noninteractive commands never prompt for tokens or initiate pairing.
   A failed/incomplete setup does not proceed to linking or provider launch.
-- The expanded 184-test suite passed locally on macOS. The earlier hosted
-  172-test results below remain revision-specific; this change needs its own CI.
+- The expanded 184-test suite passed locally on macOS and in hosted macOS/Linux
+  PR checks, with no failures or skips. Run
+  [40656288090](https://github.com/joinotto/local-code-link/actions/runs/40656288090)
+  tested PR #2's merge revision `8bc4bf9c699851472ee90942304e999ce08be69f`.
 - GitHub confirmed `main` protection: pull requests, strict app-bound macOS/Linux
   checks, administrator enforcement, no force-pushes/deletion, linear history
   and resolved conversations. Required reviewer count is zero so a solo maintainer
   can merge their own PR after CI; this is not independent review.
 - Secret scanning, push protection, Dependabot security updates and private
   vulnerability reporting are enabled. Maintainer response time is not verified.
-- Direct GitHub archive installation and a temporary global-prefix verifier are
-  added; successful runtime installation must be observed before claiming it.
+- Direct GitHub archive installation passed locally and in both hosted jobs:
+  temporary global prefixes, both launchers and native PTY execution.
+  Both hosted clean-package checks, dependency audits and 59-file package
+  inspections also passed. These fixtures did not operate a bot or real coding
+  session; fresh-user interactive pairing remains a separate acceptance gate.
 
 ## Open-source repository preparation — 2026-10-28
 

@@ -33,6 +33,11 @@ service, interrupt unrelated sessions, or sleep a machine without coordination.
 
 ## Pull requests
 
+`main` requires an up-to-date PR with passing macOS/Linux checks and resolved
+conversations. Force-pushes and deletion are prohibited, including for admins.
+Maintainers can merge their own PR after CI; another review is encouraged but
+not required. Use squash merge; do not bypass required checks.
+
 - Describe the scope, reason, verification commands and missing checks.
 - Add regression coverage for project isolation, approvals and recovery changes.
 - Do not commit credentials, private data or development evidence.
