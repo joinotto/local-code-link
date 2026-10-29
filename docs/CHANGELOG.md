@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.9.2 — release candidate (2026-10-28)
+## 0.9.2 — 2026-10-29 (preview)
+
+[Published preview and checksum](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2).
+See [installation and upgrades](UPGRADING.md). No reset or Telegram re-pairing
+is required; existing memory-only/paginated Codex conversations need explicit
+fresh-session recovery, not automatic conversion.
 
 - Linked Codex terminal starts/forks now explicitly create persistent threads
   so Telegram queue submissions are supported; native approval policies are unchanged.

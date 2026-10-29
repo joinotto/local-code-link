@@ -14,7 +14,7 @@
 Control project-scoped Claude Code and Codex sessions from Telegram.
 
 LocalCodeLink is a Node.js CLI and local background service, not a TypeScript SDK.
-[Version 0.9.1 is available as a GitHub preview](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1);
+[Version 0.9.2 is available as a GitHub preview](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2);
 no public npm release or full production sign-off is claimed.
 
 ```text
@@ -52,10 +52,10 @@ IDs are saved so later messages resume the same Claude or Codex session.
 
 ## Quick start
 
-One copy-and-paste line installs the published 0.9.1 preview and starts guided setup:
+One copy-and-paste line installs the published 0.9.2 preview and starts guided setup:
 
 ```bash
-npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz && local-code-link
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz && local-code-link
 ```
 
 The wizard lets you choose a project folder and an installed coding provider,
@@ -85,7 +85,7 @@ This is not a shared multi-tenant hosted service. Contributors can use the
 [source development instructions](CONTRIBUTING.md).
 
 If you download and verify the release archive first, the equivalent install is
-`npm install --global ./local-code-link-0.9.1.tgz && local-code-link`.
+`npm install --global ./local-code-link-0.9.2.tgz && local-code-link`.
 For development builds, the moving source archive remains available:
 
 ```bash
@@ -140,7 +140,7 @@ configuration outside the package without erasing mappings.
 
 ## Upgrade an existing installation
 
-No reset, re-pairing or project migration is needed for 0.9.1 when using the same
+No reset, re-pairing or project migration is needed for 0.9.2 when using the same
 configuration/state directory. Finish pending approvals and coding/background
 work, close managed coding sessions normally, and stop an existing background
 service before replacing its installed files:
@@ -148,7 +148,7 @@ service before replacing its installed files:
 ```bash
 # macOS only; skip if no background service is installed/loaded
 local-code-link service stop
-npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
 local-code-link service install
 local-code-link service status
 local-code-link doctor
@@ -160,14 +160,16 @@ project with `local-code-link codex` or `local-code-link claude`.
 Already-running coding terminals do not automatically load new relay code.
 For custom prefixes, checksum verification and Linux foreground mode, see the
 [upgrade guide](docs/UPGRADING.md).
+Existing memory-only or paginated Codex threads are not converted automatically;
+save their context and follow the guide's explicit fresh-session steps if needed.
 
-## Reset and start fresh (0.9.2 development build)
+## Reset and start fresh
 
 ```bash
 local-code-link reset
 ```
 
-This new workflow is not in the published 0.9.1 archive yet.
+Available in the published 0.9.2 preview.
 It asks **Yes or No**, defaulting to No. No leaves the setup unchanged.
 Yes backs up and clears local project mappings, approval/request history, logs,
 Telegram configuration and this installation's owned provider hooks, then starts
@@ -184,7 +186,7 @@ The command prints a private recovery-backup location. If fresh setup is
 cancelled, the backup remains; old credentials are not silently restored.
 Backups can contain secrets: keep them private and never commit or share them.
 The old `reset --confirm` shortcut cannot bypass the interactive confirmation.
-See [reset details](docs/UPGRADING.md#reset-and-pair-again-092-development-build).
+See [reset details](docs/UPGRADING.md#reset-and-pair-again).
 
 ## Link a project
 
@@ -510,9 +512,10 @@ execution authorization.
 
 The live provider deployment tested here is macOS with Bedrock-authenticated
 Claude, authenticated Codex, and Telegram. Hosted macOS/Linux CI passed all
-193 regression tests, clean archive installation, direct GitHub source
-installation, package inspection and dependency audit checks for the 0.9.1
-patch revision. These jobs do not
+235 regression tests, clean archive installation, direct GitHub source
+installation, package inspection and dependency audit checks for the 0.9.2
+release revision. The owner-run publisher verified these required checks before
+publication. These jobs do not
 certify live provider behavior on Linux. Actual hardware sleep/wake, long-lived
 credential expiry and other OS/provider configurations remain deployment checks,
 not blanket guarantees. See [SECURITY.md](SECURITY.md) and
