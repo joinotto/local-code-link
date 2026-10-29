@@ -109,8 +109,8 @@ export class CodexAppServerClient {
       }
     });
     await this.request("initialize", {
-      clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.1" },
-      capabilities: null,
+      clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.2" },
+      capabilities: { experimentalApi: true },
     });
     this.write({ method: "initialized" });
   }
@@ -125,7 +125,7 @@ export class CodexAppServerClient {
     };
     const threadResult = sessionId
       ? await this.request("thread/resume", { threadId: sessionId, ...common })
-      : await this.request("thread/start", { ...common, ephemeral: false });
+      : await this.request("thread/start", { ...common, ephemeral: false, historyMode: "legacy" });
     const threadId = threadResult.thread.id;
     const completion = new Promise((resolve, reject) => {
       this.completed = resolve;

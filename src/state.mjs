@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { acquireProcessLease } from "./process-lease.mjs";
+import { assertResetNotRunning } from "./reset-guard.mjs";
 
 const iso = () => new Date().toISOString();
 const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -89,6 +90,7 @@ export class StateStore {
   }
 
   async init() {
+    await assertResetNotRunning(this.root);
     await mkdir(this.root, { recursive: true, mode: 0o700 });
     try {
       this.state = parseState(await readFile(this.file, "utf8"));
@@ -175,6 +177,7 @@ export class StateStore {
         }
       }
       try {
+        await assertResetNotRunning(this.root);
         let current = null;
         try {
           current = parseState(await readFile(this.file, "utf8"));

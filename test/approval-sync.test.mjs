@@ -12,7 +12,7 @@ import { TelegramService } from "../src/telegram-service.mjs";
 import {
   claimCodexApproval, codexDecisionResult, decisionFromCodexResult,
   codexQuestionResult,
-  approvalAction,
+  approvalAction, localApprovalActor,
 } from "../src/approval-sync.mjs";
 
 const eventually = async (condition) => {
@@ -46,6 +46,7 @@ async function fixture() {
       const message = JSON.parse(data);
       if (message.method) {
         providerRequests.push(message);
+        if (message.method === "initialize") socket.send(JSON.stringify({ id: message.id, result: {} }));
         if (["thread/start", "thread/resume", "thread/fork"].includes(message.method)) {
           socket.send(JSON.stringify({ id: message.id, result: { thread: {
             id: message.method === "thread/start" ? "thread-new" : message.params.threadId,
@@ -224,12 +225,48 @@ test("native thread/start is pinned to the current project even if the remote cl
     f.frontend.send(JSON.stringify({ id: 101, method: "thread/start", params: {} }));
     await eventually(() => f.nativeMessages.some((message) => message.id === 101 && message.result));
     assert.equal(f.providerRequests.find((message) => message.id === 101).params.cwd, f.root);
+    assert.equal(f.providerRequests.find((message) => message.id === 101).params.ephemeral, false);
+    assert.equal(f.providerRequests.find((message) => message.id === 101).params.historyMode, "legacy");
     await eventually(async () => {
       await f.store.reload();
       return f.store.state.projects.demo.sessionIds.codex === "thread-new";
     });
   } finally { await f.stop(); }
 });
+
+test("native relay negotiates the explicit history format without replacing client identity or other capabilities", async () => {
+  const f = await fixture();
+  try {
+    f.frontend.send(JSON.stringify({ id: 100, method: "initialize", params: {
+      clientInfo: { name: "fixture-native", version: "1" },
+      capabilities: { experimentalApi: false, optOutNotificationMethods: ["fixture/event"] },
+    } }));
+    await eventually(() => f.nativeMessages.some((message) => message.id === 100 && message.result));
+    const params = f.providerRequests.find((message) => message.id === 100).params;
+    assert.equal(params.clientInfo.name, "fixture-native");
+    assert.equal(params.capabilities.experimentalApi, true);
+    assert.deepEqual(params.capabilities.optOutNotificationMethods, ["fixture/event"]);
+  } finally { await f.stop(); }
+});
+
+for (const method of ["thread/start", "thread/fork"]) {
+  test(`native ${method} overrides memory-only requests without changing permission settings`, async () => {
+    const f = await fixture();
+    try {
+      f.frontend.send(JSON.stringify({
+        id: 106, method, params: { threadId: "thread-1", ephemeral: true,
+          approvalPolicy: "untrusted", sandbox: "read-only" },
+      }));
+      await eventually(() => f.nativeMessages.some((message) => message.id === 106 && message.result));
+      const request = f.providerRequests.find((message) => message.id === 106);
+      assert.equal(request.params.ephemeral, false);
+      assert.equal(request.params.historyMode, method === "thread/start" ? "legacy" : undefined);
+      assert.equal(request.params.cwd, f.root);
+      assert.equal(request.params.approvalPolicy, "untrusted");
+      assert.equal(request.params.sandbox, "read-only");
+    } finally { await f.stop(); }
+  });
+}
 
 test("native resume is allowed only for this project's verified session", async () => {
   const f = await fixture();
@@ -239,6 +276,7 @@ test("native resume is allowed only for this project's verified session", async 
     }));
     await eventually(() => f.nativeMessages.some((message) => message.id === 102 && message.result));
     assert.equal(f.providerRequests.find((message) => message.id === 102).params.cwd, f.root);
+    assert.equal("ephemeral" in f.providerRequests.find((message) => message.id === 102).params, false);
   } finally { await f.stop(); }
 });
 
@@ -300,7 +338,7 @@ for (const decision of ["approve", "deny"]) {
       assert.match(f.edits.at(-1)[2], /By: /);
       assert.match(f.edits.at(-1)[2], decision === "approve" ? /Approved in Codex CLI/ : /Denied in Codex CLI/);
       await eventually(() => f.nativeMessages.some((message) => message.method === "warning"
-        && message.params.message.includes(`via Codex CLI by ${os.userInfo().username}`)));
+        && message.params.message.includes(`via Codex CLI by ${localApprovalActor()}`)));
       assert.deepEqual(f.edits.at(-1)[3], { inline_keyboard: [] });
       await f.service.handle({ callback_query: f.callback(approval, "approve") });
       assert.match(f.answers.at(-1)[1], /no longer pending/);
@@ -356,6 +394,11 @@ test("simultaneous CLI and Telegram decisions produce exactly one provider respo
   } finally { await f.stop(); }
 });
 
+test("native approval labels survive unavailable OS username lookup without changing authority", () => {
+  assert.equal(localApprovalActor(() => "fixture-user"), "fixture-user");
+  assert.equal(localApprovalActor(() => { throw new Error("passwd lookup unavailable"); }), "local terminal user");
+  assert.equal(localApprovalActor(() => null), "local terminal user");
+});
 test("unlink purges approval history while direct native approval remains usable", async () => {
   const f = await fixture();
   try {

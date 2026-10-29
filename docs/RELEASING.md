@@ -6,6 +6,11 @@ claimed. Repository publication and npm publication are separate actions.
 
 ## Current preview
 
+Version 0.9.2 is the next release candidate. Its local tests and package checks
+are recorded in [release acceptance](RELEASE_CHECKLIST.md). Publish it as a new
+GitHub preview only after its protected PR and exact merged-main checks pass;
+do not replace the existing 0.9.1 assets or claim production sign-off.
+
 [Version 0.9.1](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1)
 is published from `f39929072a431f9ed1c1e61f47a2bc0280dc8a51` with an inspected
 archive and SHA-256 checksum. See [installation/upgrades](UPGRADING.md) for

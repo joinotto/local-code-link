@@ -9,7 +9,7 @@ import { CodexSharedClient } from "./codex-shared.mjs";
 import { sameProjectDirectory } from "./session-scope.mjs";
 import {
   approvalDecisionNotice, claimCodexApproval, CODEX_REQUEST_METHODS, decisionFromCodexResult,
-  registerCodexApproval, resolveCodexApproval,
+  localApprovalActor, registerCodexApproval, resolveCodexApproval,
 } from "./approval-sync.mjs";
 
 export function tuiSocketPath(root, project) {
@@ -104,7 +104,7 @@ export class CodexTuiProxy {
       }
       try {
         await claimCodexApproval(this.store, approval.id,
-          decisionFromCodexResult(message.result), os.userInfo().username, "cli", message.result);
+          decisionFromCodexResult(message.result), localApprovalActor(), "cli", message.result);
         respond(entry, message);
       } catch {
         // Telegram won. Its exact response is sent on this same provider channel.
@@ -202,6 +202,16 @@ export class CodexTuiProxy {
         ? entries.get(String(message.id)) : null;
       if (entry) {
         void answer(entry, message).catch(console.error);
+      } else if (message.method === "initialize") {
+        // The bridge uses explicit historyMode for JSONL/TUI compatibility.
+        // This opts this private connection into protocol fields, not broader
+        // tool permissions; native approval/sandbox policy remains untouched.
+        const initialized = JSON.stringify({ ...message, params: {
+          ...message.params,
+          capabilities: { ...message.params?.capabilities, experimentalApi: true },
+        } });
+        if (open) upstream.send(initialized);
+        else outgoing.push(initialized);
       } else if (["thread/start", "thread/resume", "thread/fork"].includes(message.method)) {
         void this.scopeThreadRequest(message).then((scoped) => {
           if (closed) return;
@@ -243,7 +253,14 @@ export class CodexTuiProxy {
     }
     // Remote servers can have a different default cwd from the invoking
     // terminal. Set it explicitly even if the native client omitted it.
-    return { ...message, params: { ...params, cwd: this.projectCwd } };
+    return { ...message, params: {
+      ...params, cwd: this.projectCwd,
+      // Remote TUI clients may request memory-only threads. Linked sessions
+      // need durable history and the shared queue used by Telegram. Resuming
+      // an existing thread does not change its persistence.
+      ...(["thread/start", "thread/fork"].includes(message.method) ? { ephemeral: false } : {}),
+      ...(message.method === "thread/start" ? { historyMode: "legacy" } : {}),
+    } };
   }
 
   async trackThread(thread) {

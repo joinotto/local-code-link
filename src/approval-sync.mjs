@@ -1,5 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
+import os from "node:os";
 import { now } from "./state.mjs";
+
+export function localApprovalActor(lookup = () => os.userInfo().username) {
+  try {
+    const username = lookup();
+    if (typeof username === "string" && username.trim()) return username;
+  } catch { /* Some managed/container environments have no OS passwd entry. */ }
+  return "local terminal user";
+}
 
 export const CODEX_APPROVAL_METHODS = new Set([
   "item/commandExecution/requestApproval",

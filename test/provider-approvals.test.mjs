@@ -120,8 +120,16 @@ const rl = readline.createInterface({ input: process.stdin });
 const send = (value) => process.stdout.write(JSON.stringify(value) + "\\n");
 rl.on("line", (line) => {
   const message = JSON.parse(line);
-  if (message.method === "initialize") send({ id: message.id, result: {} });
-  if (message.method === "thread/start") send({ id: message.id, result: { thread: { id: "thread-1" } } });
+  if (message.method === "initialize") {
+    if (message.params.capabilities?.experimentalApi !== true) {
+      send({ id: message.id, error: { message: "History format requires experimental capability" } });
+    } else send({ id: message.id, result: {} });
+  }
+  if (message.method === "thread/start") {
+    if (message.params.historyMode !== "legacy" || message.params.ephemeral !== false) {
+      send({ id: message.id, error: { message: "Managed threads require persistent legacy history" } });
+    } else send({ id: message.id, result: { thread: { id: "thread-1" } } });
+  }
   if (message.method === "turn/start") {
     send({ id: message.id, result: { turn: { id: "turn-1" } } });
     send({ method: "item/completed", params: { item: { type: "agentMessage", text: "done" } } });

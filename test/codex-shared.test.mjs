@@ -95,6 +95,32 @@ test("idle Codex session starts Telegram's queued message without a second proce
   } finally { f.runtime.stop(); }
 });
 
+test("native automatic queue delivery returns the correlated result without duplicate turn dispatch", async () => {
+  const f = await fixture();
+  try {
+    const previous = f.shared.request;
+    f.shared.request = async (method, params) => {
+      const result = await previous(method, params);
+      if (method === "thread/queue/add") {
+        f.queue.shift();
+        await appendFile(f.transcript, [
+          JSON.stringify({ type: "event_msg", payload: { type: "item_completed", turn_id: "auto-turn",
+            item: { type: "UserMessage", content: params.input } } }),
+          JSON.stringify({ type: "event_msg", payload: { type: "task_complete", turn_id: "auto-turn",
+            last_agent_message: "Automatic native result" } }), "",
+        ].join("\n"));
+      }
+      return result;
+    };
+    await f.runtime.queueToLocalSession(f.project, "Hi");
+    await eventually(() => f.outputs.length === 1);
+    assert.deepEqual(f.outputs, ["Automatic native result"]);
+    assert.equal(f.calls.some((call) => call.method === "thread/queue/start"), false);
+    assert.equal(f.calls.filter((call) => call.method === "thread/queue/add").length, 1);
+    assert.equal(f.runtime.running.size, 0);
+  } finally { f.runtime.stop(); }
+});
+
 test("a fresh Codex project starts in the shared daemon and keeps its exact project directory", async () => {
   const f = await fixture();
   try {
@@ -112,6 +138,7 @@ test("a fresh Codex project starts in the shared daemon and keeps its exact proj
     await eventually(() => f.calls.some((call) => call.method === "thread/queue/start"));
     assert.equal(f.project.sessionIds.codex, "thread-1");
     assert.equal(f.calls.find((call) => call.method === "thread/start").params.cwd, f.root);
+    assert.equal(f.calls.find((call) => call.method === "thread/start").params.historyMode, "legacy");
     assert.equal(f.runtime.running.size, 0);
   } finally { f.runtime.stop(); }
 });
@@ -238,6 +265,93 @@ test("service restart recovers queued request without resubmitting it", async ()
     await f.store.save();
     await f.runtime.recoverCodexRequests();
     await eventually(() => f.calls.some((call) => call.method === "thread/queue/start"));
+    assert.equal(f.calls.some((call) => call.method === "thread/queue/add"), false);
+  } finally { f.runtime.stop(); }
+});
+
+test("an existing ephemeral thread is rejected before subscribing or recording a prompt", async () => {
+  const f = await fixture();
+  try {
+    const previous = f.shared.request;
+    f.shared.request = async (method, params) => {
+      const result = await previous(method, params);
+      if (method === "thread/read") {
+        result.thread.ephemeral = true;
+        result.thread.path = null;
+      }
+      return result;
+    };
+    await assert.rejects(f.runtime.queueToLocalSession(f.project, "do not submit", { updateId: 7 }),
+      /memory-only.*\/new/);
+    await f.store.reload();
+    assert.equal(f.project.sessionIds.codex, "thread-1");
+    assert.equal(f.project.telegramRequests?.length || 0, 0);
+    assert.equal(f.project.telegramUpdateIds?.includes(7) || false, false);
+    assert.deepEqual(f.calls.map((call) => call.method), ["thread/read"]);
+  } finally { f.runtime.stop(); }
+});
+
+test("an existing paginated thread is preserved and receives no unsupported Telegram submission", async () => {
+  const f = await fixture();
+  try {
+    const previous = f.shared.request;
+    f.shared.request = async (method, params) => {
+      const result = await previous(method, params);
+      if (method === "thread/read") result.thread.historyMode = "paginated";
+      return result;
+    };
+    await assert.rejects(f.runtime.queueToLocalSession(f.project, "test"), /paginated history/);
+    assert.equal(f.project.sessionIds.codex, "thread-1");
+    assert.equal(f.project.telegramRequests?.length || 0, 0);
+    assert.deepEqual(f.calls.map((call) => call.method), ["thread/read"]);
+  } finally { f.runtime.stop(); }
+});
+for (const rejected of [true, false]) {
+  test(`queue submission ${rejected ? "rejection is removed" : "timeout stays uncertain"} without replay`, async () => {
+    const f = await fixture();
+    try {
+      const previous = f.shared.request;
+      f.shared.request = async (method, params) => {
+        if (method === "thread/queue/add") {
+          f.calls.push({ method, params });
+          const error = new Error(rejected ? "Codex rejected input" : "Codex thread/queue/add timed out");
+          if (rejected) error.codexRejected = true;
+          throw error;
+        }
+        return previous(method, params);
+      };
+      await assert.rejects(f.runtime.queueToLocalSession(f.project, "test", { updateId: 8 }), /Codex/);
+      if (!rejected) await eventually(() => f.calls.some((call) => call.method === "thread/queue/list"));
+      await f.store.reload();
+      assert.equal(f.project.telegramRequests.length, rejected ? 0 : 1);
+      if (!rejected) assert.equal(f.project.telegramRequests[0].status, "submission_uncertain");
+      assert.equal(f.calls.filter((call) => call.method === "thread/queue/add").length, 1);
+      assert.equal(f.calls.some((call) => call.method === "thread/queue/start"), false);
+      assert.equal(f.project.telegramUpdateIds.includes(8), true);
+      assert.equal(f.runtime.running.size, 0);
+      if (rejected) {
+        assert.equal(f.runtime.transcriptWatchers.size, 0);
+        assert.equal(f.runtime.codexPumps.size, 0);
+        assert.match(f.project.lastQueueError, /rejected/);
+      }
+    } finally { f.runtime.stop(); }
+  });
+}
+
+test("restart clears only legacy definite ephemeral queue rejections and never replays them", async () => {
+  const f = await fixture("active");
+  try {
+    const lastError = "ephemeral thread does not support queued submissions: thread-1";
+    f.project.telegramRequests = [
+      { id: "rejected", status: "submission_uncertain", lastError },
+      { id: "uncertain", status: "submission_uncertain", lastError: "Connection closed" },
+      { id: "accepted", status: "submission_uncertain", lastError, queuedSubmissionId: "queued-1" },
+    ];
+    await f.store.save();
+    await f.runtime.recoverCodexRequests();
+    await f.store.reload();
+    assert.deepEqual(f.project.telegramRequests.map((request) => request.id), ["uncertain", "accepted"]);
+    assert.equal(f.project.sessionIds.codex, "thread-1");
     assert.equal(f.calls.some((call) => call.method === "thread/queue/add"), false);
   } finally { f.runtime.stop(); }
 });

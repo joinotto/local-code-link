@@ -161,6 +161,31 @@ Already-running coding terminals do not automatically load new relay code.
 For custom prefixes, checksum verification and Linux foreground mode, see the
 [upgrade guide](docs/UPGRADING.md).
 
+## Reset and start fresh (0.9.2 development build)
+
+```bash
+local-code-link reset
+```
+
+This new workflow is not in the published 0.9.1 archive yet.
+It asks **Yes or No**, defaulting to No. No leaves the setup unchanged.
+Yes backs up and clears local project mappings, approval/request history, logs,
+Telegram configuration and this installation's owned provider hooks, then starts
+fresh Telegram setup with hidden token entry.
+
+The reset refuses active managed sessions, pending approvals, queued work,
+live relay sockets or an un-stopped foreground bridge. It stops only the matching
+macOS background service. No recursive state-directory deletion is used.
+Project files, native Claude/Codex history/authentication, unrelated settings,
+and Telegram groups/topics/messages are preserved. Existing Telegram topics
+are no longer mapped after reset; fresh links create new topics.
+
+The command prints a private recovery-backup location. If fresh setup is
+cancelled, the backup remains; old credentials are not silently restored.
+Backups can contain secrets: keep them private and never commit or share them.
+The old `reset --confirm` shortcut cannot bypass the interactive confirmation.
+See [reset details](docs/UPGRADING.md#reset-and-pair-again-092-development-build).
+
 ## Link a project
 
 Inside the project folder:

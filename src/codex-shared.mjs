@@ -45,6 +45,9 @@ export class CodexSharedClient {
       if (message.error) {
         const error = new Error(message.error.message || "Codex request failed");
         error.code = message.error.code;
+        // A received RPC error is a definite rejection, unlike a timeout or
+        // lost connection after sending a request.
+        error.codexRejected = true;
         pending.reject(error);
       } else {
         pending.resolve(message.result);
@@ -77,7 +80,7 @@ export class CodexSharedClient {
         }, { once: true });
       });
       await this.request("initialize", {
-        clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.1" },
+        clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.2" },
         capabilities: { experimentalApi: true },
       });
       this.socket.send(JSON.stringify({ method: "initialized" }));

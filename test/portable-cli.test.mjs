@@ -80,3 +80,17 @@ test("no arguments in noninteractive mode show help without calling Telegram or 
   assert.match(stdout, /guided setup and project launch/);
   assert.equal(stderr, "");
 });
+
+test("reset without a terminal refuses before creating state or contacting Telegram", async () => {
+  const { env, command } = await fixture();
+  await assert.rejects(execute("/bin/sh", [command, "reset"], { env }), (error) =>
+    /interactive terminal and Yes\/No confirmation/.test(error.stderr));
+  await assert.rejects(stat(env.LOCAL_CODE_LINK_HOME), { code: "ENOENT" });
+});
+
+test("old reset --confirm cannot bypass the required Yes/No confirmation", async () => {
+  const { env, command } = await fixture();
+  await assert.rejects(execute("/bin/sh", [command, "reset", "--confirm"], { env }), (error) =>
+    /without flags.*Yes or No/.test(error.stderr));
+  await assert.rejects(stat(env.LOCAL_CODE_LINK_HOME), { code: "ENOENT" });
+});

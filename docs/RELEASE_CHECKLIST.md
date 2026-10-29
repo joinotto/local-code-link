@@ -7,6 +7,26 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## 0.9.2 release-candidate verification — 2026-10-28
+
+- All 235 automated tests passed locally on macOS with Node 22.22.0.
+- The 67-file distributable inspection and actual clean tarball installation
+  passed, including both aliases, spaced paths, native PTY and integrations.
+- A real native Codex terminal opened a persistent legacy-history thread,
+  exited without a coding prompt and reopened successfully as a fresh thread.
+  The empty thread was not incorrectly resumed. No Telegram messages, tool
+  approvals or coding prompts were submitted by this lifecycle test.
+- The tested package was installed into the owner's existing user-local CLI.
+  Configuration and Telegram topic mappings were preserved. Only a verified
+  empty-session bridge binding was cleared; native history was not deleted.
+- New regression checks cover reserved/missing rollouts, active work,
+  existing turns, paginated-history rejection and explicit capability negotiation.
+- Hosted checks, publication and live Telegram acceptance for the exact release
+  revision remain separate gates. The owner's background service still needs
+  to load the updated code from a normal terminal.
+- The existing 0.9.1 tag and assets must remain unchanged. npm publication
+  remains disabled.
+
 ## Published 0.9.1 preview — 2026-10-28
 
 - [GitHub preview v0.9.1](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1)
