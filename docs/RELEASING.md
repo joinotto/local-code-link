@@ -6,13 +6,8 @@ claimed. Repository publication and npm publication are separate actions.
 
 ## Current preview
 
-Version 0.9.2 is the next release candidate. Its local tests and package checks
-are recorded in [release acceptance](RELEASE_CHECKLIST.md). Publish it as a new
-GitHub preview only after its protected PR and exact merged-main checks pass;
-do not replace the existing 0.9.1 assets or claim production sign-off.
-
-[Version 0.9.1](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1)
-is published from `f39929072a431f9ed1c1e61f47a2bc0280dc8a51` with an inspected
+[Version 0.9.2](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)
+is published from `ac56ebeb2f228911cc16070325a48d5cdebc2446` with an inspected
 archive and SHA-256 checksum. See [installation/upgrades](UPGRADING.md) for
 end-user steps and [release acceptance](RELEASE_CHECKLIST.md) for verification
 and remaining deployment gates.
@@ -54,7 +49,7 @@ and checksum as a draft, download them and verify byte equality before publishin
 Check the public download and confirm the tag points to the tested commit.
 
 Treat published tags and release archives as immutable. Do not replace the
-0.9.1 archive or move its tag for a later fix. Runtime/package changes need a new
+0.9.1 or 0.9.2 archives or move their tags for a later fix. Runtime/package changes need a new
 version and new verification. Documentation-only corrections can land through
 a protected PR without republishing an existing archive.
 

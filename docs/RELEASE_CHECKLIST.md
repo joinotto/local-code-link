@@ -7,6 +7,54 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## Published 0.9.2 preview — 2026-10-29
+
+- [GitHub preview v0.9.2](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)
+  was published by the owner's terminal after PR #5 merged through branch
+  protection. The tag points to `ac56ebeb2f228911cc16070325a48d5cdebc2446`.
+- The owner-run publisher verified successful merged-main CI, including the
+  required macOS/Linux jobs, before building from that exact commit.
+- Publication output reports all 235 tests passed, no skipped/cancelled tests,
+  zero reported dependency vulnerabilities, 67-file inspection and a clean
+  installation of the exact distributed archive.
+- The publisher downloaded the draft assets and verified byte equality,
+  published the preview, verified its tag and checked the public archive hash.
+  Local inspection also confirmed the public download equals the tested archive.
+- A follow-up smoke check of that original clean installation passed both CLI
+  launchers and native PTY support with isolated bridge state. It did not operate
+  a bot, submit a coding prompt or resolve a provider approval.
+- Published archive: `local-code-link-0.9.2.tgz`, 139831 bytes.
+  SHA-256: `97006f031af7c18739ba76e38afb06a6a50ead14fe2bf3d25972c5b44e8230fc`.
+- The 0.9.1 release remains unchanged. npm publication remains disabled.
+  Documentation-only updates do not replace either versioned archive.
+- Live Telegram approval/prompt/interrupt/resume checks on the published
+  package and the remaining hardware/deployment gates are not signed off by
+  these distribution checks. Repeat the operator smoke test below.
+
+### Operator smoke test for the published package
+
+Use your own private bot, allowlisted account and disposable project. Never use
+destructive test actions or automatically approve a request.
+
+1. Finish pending work, close managed terminals and stop the bridge. Verify the
+   release checksum, install with the same npm prefix and reload the service
+   following [the upgrade guide](UPGRADING.md). Do not reset or re-pair.
+2. In the disposable folder, run `local-code-link codex`. Send a harmless prompt
+   from Telegram; verify its result and visibility in the same terminal session.
+   Repeat for `local-code-link claude` after closing the Codex session.
+3. For each provider, explicitly request a harmless command that needs native
+   approval. Approve once from the terminal, then separately deny from Telegram.
+   Verify both interfaces show each decision and no request is actionable twice.
+   Then repeat with terminal denial and Telegram approval.
+4. Submit a harmless longer-running task, interrupt it from Telegram, and verify
+   the native turn stops. Close and reopen the terminal; confirm a materialized
+   session resumes in the same project/topic without a competing writer.
+5. Repeat with two disposable projects active in parallel. Prompts, results and
+   approvals must stay in their respective project topics.
+
+Record the actual provider versions and results privately. A completed automated
+test suite is not evidence that these human-operated checks passed.
+
 ## 0.9.2 release-candidate verification — 2026-10-28
 
 - All 235 automated tests passed locally on macOS with Node 22.22.0.
@@ -21,9 +69,9 @@ implemented behavior, real-provider verification and outstanding release gates.
   empty-session bridge binding was cleared; native history was not deleted.
 - New regression checks cover reserved/missing rollouts, active work,
   existing turns, paginated-history rejection and explicit capability negotiation.
-- Hosted checks, publication and live Telegram acceptance for the exact release
-  revision remain separate gates. The owner's background service still needs
-  to load the updated code from a normal terminal.
+- At this pre-publication verification stage, hosted checks, publication and live
+  Telegram acceptance remained separate gates. See the publication record above
+  for the subsequently completed distribution gates.
 - The existing 0.9.1 tag and assets must remain unchanged. npm publication
   remains disabled.
 

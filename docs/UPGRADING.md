@@ -1,6 +1,6 @@
 # Install, verify and upgrade
 
-[LocalCodeLink 0.9.1](https://github.com/joinotto/local-code-link/releases/tag/v0.9.1)
+[LocalCodeLink 0.9.2](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)
 is a GitHub preview. npm registry publication remains disabled.
 Use Node.js 20.18.1 or newer; Node.js 22.22.0 is used for verification.
 macOS is the verified native deployment. Linux foreground/protocol checks do
@@ -9,7 +9,7 @@ not constitute live native-provider acceptance; Windows is unsupported.
 ## Install the published preview
 
 ```sh
-npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
 local-code-link
 ```
 
@@ -24,15 +24,15 @@ Download both assets from the trusted release page into a temporary directory:
 ```sh
 lcl_release_dir="$(mktemp -d)"
 cd "$lcl_release_dir"
-curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz
-curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz.sha256
-shasum -a 256 -c local-code-link-0.9.1.tgz.sha256
+curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
+curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz.sha256
+shasum -a 256 -c local-code-link-0.9.2.tgz.sha256
 ```
 
-Continue only if the checksum reports `OK`. The published 0.9.1 archive's SHA-256 is:
+Continue only if the checksum reports `OK`. The published 0.9.2 archive's SHA-256 is:
 
 ```text
-f556de1bf5bd8e7ba439603ba1c6b660a1867f1eb69155d6db119d26494ee182
+97006f031af7c18739ba76e38afb06a6a50ead14fe2bf3d25972c5b44e8230fc
 ```
 
 This checks byte integrity against the published checksum, not the safety of
@@ -40,7 +40,7 @@ arbitrary code or a replacement asset from an untrusted source.
 Install the verified archive with:
 
 ```sh
-npm install --global ./local-code-link-0.9.1.tgz
+npm install --global ./local-code-link-0.9.2.tgz
 ```
 
 ## Upgrade without losing mappings
@@ -57,7 +57,7 @@ npm install --global ./local-code-link-0.9.1.tgz
 5. Restart the bridge and reopen managed project sessions as shown below.
 
 Keep the same `LOCAL_CODE_LINK_HOME` and `LOCAL_CODE_LINK_ENV_FILE` if you set
-custom paths. Version 0.9.1 does not require `reset`, `unlink`, `/new` or fresh
+custom paths. Version 0.9.2 does not require `reset`, `unlink` or fresh
 Telegram pairing. Existing private configuration, project topics and native
 session history are preserved.
 
@@ -74,7 +74,7 @@ If the original install used `--prefix`, use that same option during upgrades.
 For example, an existing user-local installation may use:
 
 ```sh
-npm install --global --prefix "$HOME/.local" https://github.com/joinotto/local-code-link/releases/download/v0.9.1/local-code-link-0.9.1.tgz
+npm install --global --prefix "$HOME/.local" https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
 ```
 
 Changing Node versions can change the default global npm prefix. Installing
@@ -132,10 +132,14 @@ See [release acceptance](RELEASE_CHECKLIST.md) for observed results and remainin
 live/hardware checks. Automated tests and checksum verification are not full
 production sign-off.
 
-## Reset and pair again (0.9.2 development build)
+Existing memory-only or paginated Codex threads are not converted during an
+upgrade. If you have one, preserve its context and follow the explicit
+fresh-session steps below. Ordinary supported saved sessions remain resumable.
+
+## Reset and pair again
 
 Reset is an explicit start-over operation, **not** a required upgrade step.
-The following new workflow is not included in the published 0.9.1 archive yet:
+The following workflow is available in the published 0.9.2 preview:
 
 ```sh
 local-code-link reset
@@ -180,7 +184,7 @@ The backup location printed by reset retains the previous configuration/history
 for recovery. Backups contain private data and potentially credentials; do not
 commit or share them.
 
-## Recovering a memory-only Codex session (0.9.2 development fix)
+## Recovering a memory-only Codex session
 
 If Telegram reports `ephemeral thread does not support queued submissions`,
 the linked terminal created a memory-only thread. Updated starts/forks explicitly
