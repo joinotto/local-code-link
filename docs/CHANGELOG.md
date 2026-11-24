@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.3 — 2026-11-24 (preview)
+
+- A Codex startup timeout now identifies a shared socket link whose target is
+  missing and explains how to recover after saving or finishing active work.
+- Other timeouts point to `codex app-server daemon version` for a connectivity
+  check. Background diagnostics inspect the same socket the client uses.
+- Added isolated regression coverage and [recovery instructions](TROUBLESHOOTING.md).
+
+This is a diagnostic improvement, not automatic daemon repair. LocalCodeLink
+does not stop or restart Codex, remove locks or launch a competing session writer.
+No reset, Telegram re-pairing or project migration is required.
+Existing installations must upgrade and reload the bridge to use the new message.
+Live provider and hardware acceptance remain separate from automated checks.
+npm publication remains disabled.
+
 ## 0.9.2 — 2026-10-29 (preview)
 
 [Published preview and checksum](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2).

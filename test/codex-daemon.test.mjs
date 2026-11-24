@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { startSharedCodexServer } from "../src/codex-daemon.mjs";
 
 test("shared Codex startup uses the selected executable, strips Telegram token and bounds the wait", async () => {
@@ -36,8 +39,52 @@ test("inaccessible Codex and startup timeout have distinct errors", async () => 
     [{ code: "ETIMEDOUT" }, /timed out after 30 seconds/],
   ]) {
     await assert.rejects(startSharedCodexServer("/fixture/codex", {
+      socketPath: "/nonexistent/local-code-link-fixture/socket",
       execute: async () => ({ error, stdout: "", stderr: "" }),
     }), expected);
+  }
+});
+
+test("timeout diagnoses a dangling Codex socket without stopping or restarting the daemon", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "lcl-codex-socket-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const control = path.join(root, "app-server-control");
+  await mkdir(control);
+  const socketPath = path.join(control, "app-server-control.sock");
+  await symlink("../missing.sock", socketPath);
+  for (const settings of [
+    { socketPath },
+    { env: { CODEX_APP_SERVER_SOCKET: socketPath } },
+    { env: { CODEX_HOME: root } },
+  ]) {
+    const calls = [];
+    await assert.rejects(startSharedCodexServer("/fixture/codex", {
+      ...settings,
+      execute: async (_executable, args) => {
+        calls.push(args);
+        return { error: { killed: true }, stdout: "", stderr: "" };
+      },
+    }), (error) => /socket link points to a missing file/.test(error.message)
+      && /Finish or save work in all shared Codex sessions/.test(error.message)
+      && /Restarting can interrupt/.test(error.message)
+      && !error.message.includes(root));
+    assert.deepEqual(calls, [["app-server", "daemon", "start"]]);
+  }
+});
+
+test("other socket states retain the generic timeout guidance", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "lcl-codex-socket-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const target = path.join(root, "target");
+  await writeFile(target, "");
+  const link = path.join(root, "link");
+  await symlink(target, link);
+  for (const socketPath of [path.join(root, "absent"), target, link]) {
+    await assert.rejects(startSharedCodexServer("/fixture/codex", {
+      socketPath,
+      execute: async () => ({ error: { code: "ETIMEDOUT" }, stdout: "", stderr: "" }),
+    }), (error) => /codex app-server daemon version/.test(error.message)
+      && !/socket link points|daemon restart/.test(error.message));
   }
 });
 

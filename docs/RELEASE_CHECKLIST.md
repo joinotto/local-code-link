@@ -7,6 +7,19 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## 0.9.3 diagnostic patch scope — 2026-11-24
+
+The patch identifies dangling shared Codex socket links after a startup timeout
+and provides recovery guidance. Regression fixtures cover missing targets,
+socket overrides and ordinary timeouts without operating a real daemon.
+It does not repair or restart an active daemon.
+
+This patch does not repeat live Telegram/provider or hardware acceptance.
+Existing live sessions were intentionally left running. The historical results
+below apply to their stated revisions; they are not new 0.9.3 sign-offs.
+The 0.9.3 release notes record the distribution checks run for that artifact.
+npm publication remains disabled.
+
 ## Published 0.9.2 preview — 2026-10-29
 
 - [GitHub preview v0.9.2](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)

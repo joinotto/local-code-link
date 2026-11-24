@@ -224,7 +224,7 @@ export class CodingRuntime {
       catch (error) {
         if (error.code !== "ENOENT") throw error;
         const env = codingEnvironment(await this.environmentResolver());
-        await startSharedCodexServer(this.codexBin, { env });
+        await startSharedCodexServer(this.codexBin, { env, socketPath: this.codexShared.socketPath });
       }
     }
     await this.codexShared.connect();

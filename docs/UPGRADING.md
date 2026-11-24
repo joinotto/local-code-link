@@ -1,6 +1,6 @@
 # Install, verify and upgrade
 
-[LocalCodeLink 0.9.2](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)
+[LocalCodeLink 0.9.3](https://github.com/joinotto/local-code-link/releases/tag/v0.9.3)
 is a GitHub preview. npm registry publication remains disabled.
 Use Node.js 20.18.1 or newer; Node.js 22.22.0 is used for verification.
 macOS is the verified native deployment. Linux foreground/protocol checks do
@@ -9,7 +9,7 @@ not constitute live native-provider acceptance; Windows is unsupported.
 ## Install the published preview
 
 ```sh
-npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
 local-code-link
 ```
 
@@ -24,23 +24,20 @@ Download both assets from the trusted release page into a temporary directory:
 ```sh
 lcl_release_dir="$(mktemp -d)"
 cd "$lcl_release_dir"
-curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
-curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz.sha256
-shasum -a 256 -c local-code-link-0.9.2.tgz.sha256
+curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
+curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz.sha256
+shasum -a 256 -c local-code-link-0.9.3.tgz.sha256
 ```
 
-Continue only if the checksum reports `OK`. The published 0.9.2 archive's SHA-256 is:
-
-```text
-97006f031af7c18739ba76e38afb06a6a50ead14fe2bf3d25972c5b44e8230fc
-```
+Continue only if the checksum reports `OK`. The release asset
+`local-code-link-0.9.3.tgz.sha256` contains the checksum for this version.
 
 This checks byte integrity against the published checksum, not the safety of
 arbitrary code or a replacement asset from an untrusted source.
 Install the verified archive with:
 
 ```sh
-npm install --global ./local-code-link-0.9.2.tgz
+npm install --global ./local-code-link-0.9.3.tgz
 ```
 
 ## Upgrade without losing mappings
@@ -57,7 +54,7 @@ npm install --global ./local-code-link-0.9.2.tgz
 5. Restart the bridge and reopen managed project sessions as shown below.
 
 Keep the same `LOCAL_CODE_LINK_HOME` and `LOCAL_CODE_LINK_ENV_FILE` if you set
-custom paths. Version 0.9.2 does not require `reset`, `unlink` or fresh
+custom paths. Version 0.9.3 does not require `reset`, `unlink` or fresh
 Telegram pairing. Existing private configuration, project topics and native
 session history are preserved.
 
@@ -74,7 +71,7 @@ If the original install used `--prefix`, use that same option during upgrades.
 For example, an existing user-local installation may use:
 
 ```sh
-npm install --global --prefix "$HOME/.local" https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz
+npm install --global --prefix "$HOME/.local" https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
 ```
 
 Changing Node versions can change the default global npm prefix. Installing
@@ -126,6 +123,13 @@ Select **Reuse configured bot** to preserve existing pairing and topics.
 This makes the provider path available to the background service even if Codex
 is installed under a different Node version.
 
+## Recover a Codex socket startup timeout
+
+Version 0.9.3 identifies a shared socket link whose target is missing. This
+diagnostic does not repair the running daemon. See
+[Codex startup troubleshooting](TROUBLESHOOTING.md) and save or finish active
+work before any manual daemon restart. Re-pairing Telegram is unnecessary.
+
 ## Preview status
 
 See [release acceptance](RELEASE_CHECKLIST.md) for observed results and remaining
@@ -139,7 +143,7 @@ fresh-session steps below. Ordinary supported saved sessions remain resumable.
 ## Reset and pair again
 
 Reset is an explicit start-over operation, **not** a required upgrade step.
-The following workflow is available in the published 0.9.2 preview:
+The following workflow is available in the published 0.9.3 preview:
 
 ```sh
 local-code-link reset

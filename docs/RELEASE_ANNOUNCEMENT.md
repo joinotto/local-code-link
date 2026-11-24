@@ -1,30 +1,26 @@
-# LocalCodeLink 0.9.2 preview
+# LocalCodeLink 0.9.3 preview
 
-Control project-scoped Claude Code and Codex sessions from Telegram while
-keeping native terminal access and approval checks.
+Codex startup timeouts now explain when the shared socket link points to a
+missing file and how to recover safely. This can block new Telegram connections
+while existing Codex sessions remain connected.
 
-This release fixes Codex persistence, empty-session resume and rejected queue
-recovery. It also adds a safe interactive `local-code-link reset` with private
-backups. Normal upgrades preserve Telegram mappings and native coding history;
-no reset or re-pairing is required.
+This is a diagnostic improvement. It does not automatically repair or restart
+the daemon. Finish or save work in all shared sessions before following the
+[recovery instructions](TROUBLESHOOTING.md).
 
-Install the preview:
+## Install or upgrade
 
 ```sh
-npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.2/local-code-link-0.9.2.tgz && local-code-link
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
 ```
 
-Existing users should first finish pending work, stop their bridge and follow
-[the upgrade guide](UPGRADING.md), retaining the same npm prefix.
+Existing users should finish pending bridge work and follow the
+[upgrade guide](UPGRADING.md), using the same npm prefix and reloading the bridge.
+Already-running installations do not automatically receive the patch.
+No reset, project migration or Telegram re-pairing is required.
 
-Verification: 235 passing automated tests, required macOS/Linux CI, zero reported
-dependency vulnerabilities, clean archive installation and checked release
-checksums. These are distribution checks, not full production sign-off.
+[Release and checksum](https://github.com/joinotto/local-code-link/releases/tag/v0.9.3)
 
-Known limits: macOS is the verified native deployment; Windows is unsupported.
-Existing memory-only/paginated Codex conversations are not automatically
-converted. Live Telegram and hardware acceptance remain deployment checks.
-npm registry publication remains disabled.
-
-[Release and checksum](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)
-· [Release acceptance](RELEASE_CHECKLIST.md) · [Security](../SECURITY.md)
+This remains a preview. Automated distribution checks do not constitute live
+Telegram, native provider or hardware acceptance. npm registry publication
+remains disabled.
