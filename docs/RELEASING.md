@@ -6,9 +6,9 @@ claimed. Repository publication and npm publication are separate actions.
 
 ## Current preview
 
-[Version 0.9.2](https://github.com/joinotto/local-code-link/releases/tag/v0.9.2)
-is published from `ac56ebeb2f228911cc16070325a48d5cdebc2446` with an inspected
-archive and SHA-256 checksum. See [installation/upgrades](UPGRADING.md) for
+[Version 0.9.3](https://github.com/joinotto/local-code-link/releases/tag/v0.9.3)
+is the diagnostic patch preview. Its release includes the versioned archive
+and SHA-256 checksum. See [installation/upgrades](UPGRADING.md) for
 end-user steps and [release acceptance](RELEASE_CHECKLIST.md) for verification
 and remaining deployment gates.
 
@@ -49,7 +49,7 @@ and checksum as a draft, download them and verify byte equality before publishin
 Check the public download and confirm the tag points to the tested commit.
 
 Treat published tags and release archives as immutable. Do not replace the
-0.9.1 or 0.9.2 archives or move their tags for a later fix. Runtime/package changes need a new
+existing archives or move their tags for a later fix. Runtime/package changes need a new
 version and new verification. Documentation-only corrections can land through
 a protected PR without republishing an existing archive.
 
