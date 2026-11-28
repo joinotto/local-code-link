@@ -7,6 +7,22 @@ implemented behavior, real-provider verification and outstanding release gates.
 
 **Status: release candidate; full production sign-off is not granted.**
 
+## 0.9.5 paginated-history fix — 2026-11-28 (preview)
+
+- The local build passed all 254 automated tests, including paginated result correlation,
+  reconnect/restart recovery without prompt replay, binding changes, uncertain
+  Telegram delivery and completion-hook duplicate prevention.
+- An isolated live conversation on the installed Codex daemon used paginated
+  history, resumed the same thread and retained earlier context when answering
+  a queued prompt. Results went to an isolated sink; no Telegram message was sent
+  and no permission request was approved. Only the disposable thread was archived.
+- Existing user conversations were not restarted or replaced for this test.
+  This is not actual Telegram delivery, hosted CI or full hardware acceptance.
+- Local package inspection and a clean tarball installation passed. The dependency
+  audit passed the configured high-severity gate and reported two moderate
+  transitive dependency findings (`hono` and `@hono/node-server`).
+  The GitHub release notes record checks for the final merged artifact.
+
 ## 0.9.3 diagnostic patch scope — 2026-11-24
 
 The patch identifies dangling shared Codex socket links after a startup timeout

@@ -7,6 +7,7 @@ import path from "node:path";
 import { ClaudeStreamClient } from "./claude-stream.mjs";
 import { CodexAppServerClient } from "./codex-app-server.mjs";
 import { CodexSharedClient } from "./codex-shared.mjs";
+import { codexHistoryBoundary, codexRequestMarker, findCodexHistoryResult } from "./codex-history.mjs";
 import { discardRejectedEphemeralSubmissions } from "./codex-queue.mjs";
 import { now, publicProject, slug } from "./state.mjs";
 import { claudeRequest } from "./claude-ipc.mjs";
@@ -20,7 +21,7 @@ import {
 
 const APPROVAL_EXPIRY_MS = 15 * 60_000;
 const linked = (project) => project && !["unlinked", "archived"].includes(project.status);
-const requestMarker = (id) => `[LocalCodeLink Telegram request ${id}]`;
+const requestMarker = codexRequestMarker;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const seenUpdate = (project, updateId) => Number.isSafeInteger(updateId)
   && project.telegramUpdateIds?.includes(updateId);
@@ -173,12 +174,70 @@ export class CodingRuntime {
     }
   }
 
+  async watchCodexHistory(projectId, requestId) {
+    while (!this.stopped) {
+      await sleep(this.pollMs);
+      await this.store.reload();
+      const project = this.store.state.projects[projectId];
+      const request = project?.telegramRequests?.find((item) => item.id === requestId);
+      if (!linked(project) || !request) return;
+      if (request.output !== undefined) {
+        await this.deliverCodexResult(project, request);
+        return;
+      }
+      const sameBinding = (current) => linked(current) && current.provider === "codex"
+        && current.sessionIds?.codex === request.sessionId
+        && current.linkId === request.linkId && current.topicId === request.topicId;
+      if (!sameBinding(project)) {
+        throw new Error("Codex project/session binding changed; the pending request was preserved.");
+      }
+      try {
+        await this.sharedThread(project);
+        const result = await findCodexHistoryResult(this.codexShared, request);
+        if (!result) continue;
+        await this.store.reload();
+        const current = this.store.state.projects[projectId];
+        const saved = current?.telegramRequests?.find((item) => item.id === requestId);
+        if (!sameBinding(current) || !saved) return;
+        saved.turnId = result.turnId;
+        if (result.output !== undefined) {
+          saved.output = result.output;
+          saved.status = "delivering";
+        } else {
+          saved.status = "active";
+        }
+        delete saved.historyError;
+        await this.store.save();
+        if (saved.output !== undefined) {
+          await this.deliverCodexResult(current, saved);
+          return;
+        }
+      } catch (error) {
+        // A reconnect or history read must never replay queue/add. The durable
+        // request stays pending and can be correlated after the daemon returns.
+        await this.store.reload();
+        const current = this.store.state.projects[projectId];
+        const saved = current?.telegramRequests?.find((item) => item.id === requestId);
+        if (!sameBinding(current) || !saved) return;
+        if (saved.historyError !== error.message) {
+          saved.historyError = error.message;
+          current.lastQueueError = `Codex result tracking: ${error.message}`;
+          await this.store.save();
+        }
+        // Bound retries while the server is unavailable.
+        await sleep(Math.max(this.pollMs, 1000));
+      }
+    }
+  }
+
   watchRequest(project, request) {
     if (this.transcriptWatchers.has(request.id)) return;
     const task = (request.output !== undefined
       ? this.deliverCodexResult(project, request)
-      : this.watchCodexTranscript(project.id, request.id,
-        request.transcriptPath, request.transcriptOffset || 0))
+      : request.historyMode === "paginated"
+        ? this.watchCodexHistory(project.id, request.id)
+        : this.watchCodexTranscript(project.id, request.id,
+          request.transcriptPath, request.transcriptOffset || 0))
       .catch((error) => console.error(`Codex transcript watcher: ${error.message}`))
       .finally(() => this.transcriptWatchers.delete(request.id));
     this.transcriptWatchers.set(request.id, task);
@@ -188,6 +247,9 @@ export class CodingRuntime {
     await this.store.reload();
     const saved = project.telegramRequests?.find((item) => item.id === request.id);
     if (!linked(project) || !saved || saved.output === undefined || !deliveryReady(saved)) return;
+    if (saved.historyMode === "paginated" && (project.provider !== "codex"
+      || project.sessionIds?.codex !== saved.sessionId || project.linkId !== saved.linkId
+      || project.topicId !== saved.topicId)) return;
     try { await this.onOutput(project, saved.output); }
     catch (error) {
       await this.store.reload();
@@ -210,8 +272,9 @@ export class CodingRuntime {
   async sharedThread(project) {
     await this.connectCodex();
     const { thread } = await this.codexShared.request("thread/read", {
-      threadId: project.sessionIds.codex,
+      threadId: project.sessionIds.codex, includeTurns: false,
     });
+    if (thread?.id !== project.sessionIds.codex) throw new Error("Codex returned unexpected session metadata");
     if (await realpath(thread.cwd) !== await realpath(project.cwd)) {
       throw new Error("Saved Codex session belongs to another folder; relink the correct session");
     }
@@ -282,6 +345,11 @@ export class CodingRuntime {
   }
 
   async startQueuedRequest(project) {
+    if (project.telegramRequests?.some((request) => request.historyMode === "paginated"
+      && (request.sessionId !== project.sessionIds?.codex || request.linkId !== project.linkId
+        || request.topicId !== project.topicId))) {
+      throw new Error("Codex project/session binding changed; pending work was preserved.");
+    }
     const thread = await this.sharedThread(project);
     if (!this.proxyIsActive(project)) await this.subscribeCodexApprovals(project);
     if (thread.status.type === "notLoaded") {
@@ -379,24 +447,29 @@ export class CodingRuntime {
         + "Finish and close the terminal session, send /new in this project's Telegram topic, "
         + "then reopen with local-code-link codex. The old session is not deleted and its context is not transferred.");
     }
-    if (thread.historyMode === "paginated") {
-      throw new Error("This saved Codex thread uses paginated history, which this bridge cannot read for Telegram results. "
-        + "Keep its context, then explicitly start a fresh managed session with /new and local-code-link codex. No prompt was submitted.");
-    }
+    const paginated = thread.historyMode === "paginated";
+    const linkId = project.linkId;
+    const topicId = project.topicId;
+    const historyAfterTurnId = paginated ? await codexHistoryBoundary(this.codexShared, sessionId) : null;
     if (!this.proxyIsActive(project)) await this.subscribeCodexApprovals(project);
     const requestId = randomUUID();
-    const transcriptPath = thread.path || await this.findCodexTranscript(project);
-    if (!transcriptPath) throw new Error("Cannot locate Codex session history; message was not submitted");
+    const transcriptPath = paginated ? null : thread.path || await this.findCodexTranscript(project);
+    if (!paginated && !transcriptPath) throw new Error("Cannot locate Codex session history; message was not submitted");
     let transcriptOffset = 0;
-    try { transcriptOffset = (await stat(transcriptPath)).size; } catch {}
+    if (transcriptPath) try { transcriptOffset = (await stat(transcriptPath)).size; } catch {}
+    await this.store.reload();
+    if (!linked(project) || project.provider !== "codex" || project.sessionIds?.codex !== sessionId
+      || project.linkId !== linkId || project.topicId !== topicId) {
+      throw new Error("Project session changed while preparing the Telegram request; no prompt was submitted.");
+    }
     project.telegramRequests ||= [];
     const request = {
       id: requestId,
       status: "queued",
       createdAt: now(),
       sessionId,
-      transcriptPath,
-      transcriptOffset,
+      ...(paginated ? { historyMode: "paginated", historyAfterTurnId, linkId, topicId }
+        : { transcriptPath, transcriptOffset }),
     };
     project.telegramRequests.push(request);
     rememberUpdate(project, options.updateId);
@@ -584,7 +657,7 @@ export class CodingRuntime {
         && ["pending", "responding"].includes(item.status) && item.source === "codex-shared");
       if (pending && !this.proxyIsActive(project)) await this.subscribeCodexApprovals(project);
       for (const request of requests) {
-        request.transcriptPath ||= await this.findCodexTranscript(project);
+        if (request.historyMode !== "paginated") request.transcriptPath ||= await this.findCodexTranscript(project);
         request.sessionId ||= project.sessionIds.codex;
         this.watchRequest(project, request);
       }

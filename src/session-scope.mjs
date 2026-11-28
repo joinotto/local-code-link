@@ -32,21 +32,18 @@ async function hasResumableRollout(thread, client) {
   if (thread.path != null && (typeof thread.path !== "string" || !path.isAbsolute(thread.path))) {
     throw new Error("Codex returned an invalid rollout path; refusing to replace the saved session.");
   }
-  if (thread.path) {
+  if (thread.historyMode !== "paginated" && thread.path) {
     try {
       const file = await stat(thread.path);
       if (!file.isFile()) throw new Error("Codex's saved rollout is not a regular file; inspect it before reopening.");
       if (file.size > 0) {
-        if (thread.historyMode === "paginated") {
-          throw new Error("The saved Codex thread uses paginated history, which this bridge does not support for Telegram results. Preserve its context and explicitly use /new if you want a fresh managed session.");
-        }
         return true;
       }
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
     }
   }
-  if (thread.status?.type === "active") {
+  if (thread.historyMode !== "paginated" && thread.status?.type === "active") {
     throw new Error("Codex is active but its rollout is not saved yet. Finish the active turn before reopening; no new session was started.");
   }
   // A persistent thread's path may be only a reservation until its first
@@ -64,7 +61,11 @@ async function hasResumableRollout(thread, client) {
   }
   if (!Array.isArray(turns?.data)) throw new Error("Cannot verify saved Codex turns; the binding was preserved.");
   if (turns.data.length) {
+    if (thread.historyMode === "paginated") return true;
     throw new Error("Codex's rollout is missing but the thread has existing turns. Preserve its context and restore the history or explicitly use /new; no replacement was started.");
+  }
+  if (thread.status?.type === "active") {
+    throw new Error("Codex is active but its history is not saved yet; no replacement was started.");
   }
   return false;
 }

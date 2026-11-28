@@ -72,9 +72,10 @@ try {
     const requestIndex = project.telegramRequests?.findIndex((item) =>
       item.status === "active"
       && (!item.turnId || !input.turn_id || item.turnId === input.turn_id)) ?? -1;
-    // Shared-server requests have a durable transcript watcher. Do not race it
+    // Shared-server requests have a durable result watcher. Do not race it
     // and deliver the same answer twice from the Stop hook.
     if (requestIndex >= 0 && !project.telegramRequests[requestIndex].transcriptPath
+      && project.telegramRequests[requestIndex].historyMode !== "paginated"
       && input.last_assistant_message) {
       const client = new TelegramClient(process.env.TELEGRAM_BOT_TOKEN);
       await client.sendMessage(

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.5 — 2026-11-28 (preview)
+
+- Existing persistent Codex conversations with paginated history can stay linked
+  to Telegram. Results are read through the shared daemon's history APIs, without
+  creating a replacement thread, converting history or changing native permissions.
+- Correlate replies with the submitted request across history pages and reconnects.
+  Recovery preserves uncertain submissions without resending the prompt.
+- Preserve project/topic/session isolation and prevent duplicate result delivery
+  from the Codex completion hook.
+- Validation: 254 automated tests passed. An isolated live Codex conversation
+  retained its prior context and returned a queued reply in the same thread.
+  Actual Telegram delivery and full release acceptance remain separate checks.
+
 ## 0.9.3 — 2026-11-24 (preview)
 
 - A Codex startup timeout now identifies a shared socket link whose target is
