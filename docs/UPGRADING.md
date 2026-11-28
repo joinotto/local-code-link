@@ -1,6 +1,6 @@
 # Install, verify and upgrade
 
-[LocalCodeLink 0.9.3](https://github.com/joinotto/local-code-link/releases/tag/v0.9.3)
+[LocalCodeLink 0.9.5](https://github.com/joinotto/local-code-link/releases/tag/v0.9.5)
 is a GitHub preview. npm registry publication remains disabled.
 Use Node.js 20.18.1 or newer; Node.js 22.22.0 is used for verification.
 macOS is the verified native deployment. Linux foreground/protocol checks do
@@ -9,7 +9,7 @@ not constitute live native-provider acceptance; Windows is unsupported.
 ## Install the published preview
 
 ```sh
-npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
+npm install --global https://github.com/joinotto/local-code-link/releases/download/v0.9.5/local-code-link-0.9.5.tgz
 local-code-link
 ```
 
@@ -24,20 +24,20 @@ Download both assets from the trusted release page into a temporary directory:
 ```sh
 lcl_release_dir="$(mktemp -d)"
 cd "$lcl_release_dir"
-curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
-curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz.sha256
-shasum -a 256 -c local-code-link-0.9.3.tgz.sha256
+curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.5/local-code-link-0.9.5.tgz
+curl --fail --location --remote-name https://github.com/joinotto/local-code-link/releases/download/v0.9.5/local-code-link-0.9.5.tgz.sha256
+shasum -a 256 -c local-code-link-0.9.5.tgz.sha256
 ```
 
 Continue only if the checksum reports `OK`. The release asset
-`local-code-link-0.9.3.tgz.sha256` contains the checksum for this version.
+`local-code-link-0.9.5.tgz.sha256` contains the checksum for this version.
 
 This checks byte integrity against the published checksum, not the safety of
 arbitrary code or a replacement asset from an untrusted source.
 Install the verified archive with:
 
 ```sh
-npm install --global ./local-code-link-0.9.3.tgz
+npm install --global ./local-code-link-0.9.5.tgz
 ```
 
 ## Upgrade without losing mappings
@@ -54,7 +54,7 @@ npm install --global ./local-code-link-0.9.3.tgz
 5. Restart the bridge and reopen managed project sessions as shown below.
 
 Keep the same `LOCAL_CODE_LINK_HOME` and `LOCAL_CODE_LINK_ENV_FILE` if you set
-custom paths. Version 0.9.3 does not require `reset`, `unlink` or fresh
+custom paths. Version 0.9.5 does not require `reset`, `unlink` or fresh
 Telegram pairing. Existing private configuration, project topics and native
 session history are preserved.
 
@@ -71,7 +71,7 @@ If the original install used `--prefix`, use that same option during upgrades.
 For example, an existing user-local installation may use:
 
 ```sh
-npm install --global --prefix "$HOME/.local" https://github.com/joinotto/local-code-link/releases/download/v0.9.3/local-code-link-0.9.3.tgz
+npm install --global --prefix "$HOME/.local" https://github.com/joinotto/local-code-link/releases/download/v0.9.5/local-code-link-0.9.5.tgz
 ```
 
 Changing Node versions can change the default global npm prefix. Installing
@@ -125,7 +125,7 @@ is installed under a different Node version.
 
 ## Recover a Codex socket startup timeout
 
-Version 0.9.3 identifies a shared socket link whose target is missing. This
+Version 0.9.3 and later identify a shared socket link whose target is missing. This
 diagnostic does not repair the running daemon. See
 [Codex startup troubleshooting](TROUBLESHOOTING.md) and save or finish active
 work before any manual daemon restart. Re-pairing Telegram is unnecessary.
@@ -136,14 +136,14 @@ See [release acceptance](RELEASE_CHECKLIST.md) for observed results and remainin
 live/hardware checks. Automated tests and checksum verification are not full
 production sign-off.
 
-Existing memory-only or paginated Codex threads are not converted during an
-upgrade. If you have one, preserve its context and follow the explicit
-fresh-session steps below. Ordinary supported saved sessions remain resumable.
+Version 0.9.5 supports existing persistent paginated conversations directly;
+they keep their thread and context without history conversion or `/new`.
+Memory-only threads still require the explicit fresh-session steps below.
 
 ## Reset and pair again
 
 Reset is an explicit start-over operation, **not** a required upgrade step.
-The following workflow is available in the published 0.9.3 preview:
+The following workflow is available in the published 0.9.5 preview:
 
 ```sh
 local-code-link reset
@@ -215,12 +215,15 @@ than being automatically retried.
 ## Codex reserved rollout paths and history format
 
 Codex can report a persistent thread and a future rollout path before its first
-user message. That metadata alone is not proof it can resume. The CLI now checks
-for a nonempty rollout file; a verified empty/unmaterialized binding starts fresh
+user message. That metadata alone is not proof it can resume. For legacy history,
+the CLI checks for a nonempty rollout file; a verified empty/unmaterialized binding starts fresh
 in the same project/topic. Existing turns, active work or failed verification
 prevent replacement. No native history files are deleted.
 
-New managed threads explicitly use legacy JSONL history for this bridge's
-result correlation. Existing paginated threads are not converted: preserve
-their context and explicitly use `/new` for a supported managed conversation.
-Paginated-history result support remains future work.
+New managed threads explicitly use legacy JSONL history. Starting with
+version 0.9.5, existing persistent paginated threads are resumed
+using the daemon's turn metadata and read through `thread/turns/list` and
+`thread/items/list`. They do not need a JSONL rollout file or a fresh conversation.
+If history access cannot be verified, the binding is preserved and no prompt is
+submitted. A reconnect after submission resumes result tracking without replaying
+the prompt. Existing native permission checks remain enabled.

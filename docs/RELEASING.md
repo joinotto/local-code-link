@@ -6,8 +6,8 @@ claimed. Repository publication and npm publication are separate actions.
 
 ## Current preview
 
-[Version 0.9.3](https://github.com/joinotto/local-code-link/releases/tag/v0.9.3)
-is the diagnostic patch preview. Its release includes the versioned archive
+[Version 0.9.5](https://github.com/joinotto/local-code-link/releases/tag/v0.9.5)
+is the paginated Codex history preview. Its release includes the versioned archive
 and SHA-256 checksum. See [installation/upgrades](UPGRADING.md) for
 end-user steps and [release acceptance](RELEASE_CHECKLIST.md) for verification
 and remaining deployment gates.

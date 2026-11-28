@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmod, mkdtemp, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, writeFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { ClaudeStreamClient } from "../src/claude-stream.mjs";
 import { CodexAppServerClient } from "../src/codex-app-server.mjs";
+import { StateStore } from "../src/state.mjs";
 
 function captureWrites(client) {
   const writes = [];
@@ -42,6 +43,38 @@ test("legacy Codex PermissionRequest hook returns immediately without initializi
   assert.deepEqual(JSON.parse(stdout), {});
 });
 
+test("Codex Stop hook leaves paginated results to their durable watcher without duplicate delivery", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "lcl-paginated-hook-"));
+  const store = await new StateStore(path.join(root, "state")).init();
+  store.state.telegram.chatId = "-1001";
+  store.state.projects.fixture = { id: "fixture", cwd: root, topicId: 9, provider: "codex", status: "busy",
+    sessionIds: { codex: "fixture-thread" }, telegramRequests: [
+      { id: "request-1", status: "active", turnId: "turn-1", historyMode: "paginated" },
+    ] };
+  await store.save();
+  const marker = path.join(root, "unexpected-delivery");
+  const preload = path.join(root, "no-network.mjs");
+  await writeFile(preload, `import {TelegramClient} from ${JSON.stringify(new URL("../src/telegram.mjs", import.meta.url).href)};
+import {writeFile} from 'node:fs/promises';
+TelegramClient.prototype.sendMessage = async () => { await writeFile(${JSON.stringify(marker)}, 'called'); return {}; };`);
+  const child = spawn(process.execPath, ["--import", preload,
+    new URL("../src/codex-permission-hook.mjs", import.meta.url).pathname], {
+    env: { ...process.env, LOCAL_CODE_LINK_HOME: store.root,
+      LOCAL_CODE_LINK_ENV_FILE: path.join(root, "absent.env"), TELEGRAM_BOT_TOKEN: "isolated-fixture-token" },
+    timeout: 3000,
+  });
+  let stderr = "";
+  child.stdout.resume();
+  child.stderr.on("data", chunk => { stderr += chunk; });
+  child.stdin.end(JSON.stringify({ hook_event_name: "Stop", cwd: root, session_id: "fixture-thread",
+    turn_id: "turn-1", last_assistant_message: "Do not send twice" }));
+  const code = await new Promise((resolve, reject) => { child.on("error", reject); child.on("close", resolve); });
+  assert.equal(code, 0);
+  assert.equal(stderr, "");
+  await assert.rejects(stat(marker), { code: "ENOENT" });
+  await store.reload();
+  assert.equal(store.state.projects.fixture.telegramRequests.length, 1);
+});
 test("Codex approval callbacks return approve-once and never persistent approval", async () => {
   const client = new CodexAppServerClient({
     command: "codex",

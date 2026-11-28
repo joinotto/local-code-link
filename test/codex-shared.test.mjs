@@ -291,16 +291,17 @@ test("an existing ephemeral thread is rejected before subscribing or recording a
   } finally { f.runtime.stop(); }
 });
 
-test("an existing paginated thread is preserved and receives no unsupported Telegram submission", async () => {
+test("unsupported paginated history APIs fail before recording or submitting a Telegram prompt", async () => {
   const f = await fixture();
   try {
     const previous = f.shared.request;
     f.shared.request = async (method, params) => {
+      if (method === "thread/turns/list") throw new Error("Unsupported history API");
       const result = await previous(method, params);
       if (method === "thread/read") result.thread.historyMode = "paginated";
       return result;
     };
-    await assert.rejects(f.runtime.queueToLocalSession(f.project, "test"), /paginated history/);
+    await assert.rejects(f.runtime.queueToLocalSession(f.project, "test"), /Unsupported history API/);
     assert.equal(f.project.sessionIds.codex, "thread-1");
     assert.equal(f.project.telegramRequests?.length || 0, 0);
     assert.deepEqual(f.calls.map((call) => call.method), ["thread/read"]);

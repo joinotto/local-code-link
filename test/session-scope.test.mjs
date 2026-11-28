@@ -207,16 +207,32 @@ test("turn verification failure preserves an unavailable rollout binding", async
   assert.equal(f.project.sessionIds.codex, "thread-current");
 });
 
-test("a materialized paginated session is preserved instead of pretending JSONL bridging is supported", async () => {
+test("an existing paginated session resumes through API history without requiring a JSONL file", async () => {
   const f = await fixture();
+  await unlink(f.rollout);
   const previous = f.client.request;
   f.client.request = async (method, params) => {
+    if (method === "thread/turns/list") return { data: [{ id: "existing-turn" }] };
     const result = await previous(method, params);
     result.thread.historyMode = "paginated";
     return result;
   };
-  await assert.rejects(selectCodexSession(f.store, f.project, f.client, f.cwd), /paginated history/);
+  assert.deepEqual(await selectCodexSession(f.store, f.project, f.client, f.cwd),
+    { sessionId: "thread-current", reason: null });
   await f.store.reload();
+  assert.equal(f.project.sessionIds.codex, "thread-current");
+});
+
+test("paginated history verification failures preserve the existing conversation", async () => {
+  const f = await fixture();
+  const previous = f.client.request;
+  f.client.request = async (method, params) => {
+    if (method === "thread/turns/list") throw new Error("History temporarily unavailable");
+    const result = await previous(method, params);
+    result.thread.historyMode = "paginated";
+    return result;
+  };
+  await assert.rejects(selectCodexSession(f.store, f.project, f.client, f.cwd), /temporarily unavailable/);
   assert.equal(f.project.sessionIds.codex, "thread-current");
 });
 test("canonical symlink paths to the same project can resume", async () => {

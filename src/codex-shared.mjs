@@ -80,7 +80,7 @@ export class CodexSharedClient {
         }, { once: true });
       });
       await this.request("initialize", {
-        clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.3" },
+        clientInfo: { name: "local-code-link", title: "LocalCodeLink", version: "0.9.5" },
         capabilities: { experimentalApi: true },
       });
       this.socket.send(JSON.stringify({ method: "initialized" }));
